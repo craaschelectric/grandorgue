@@ -70,12 +70,12 @@ GOVoicingDialog::GOVoicingDialog(
   const std::vector<GOPipeConfigNode *> &mpNodes,
   const std::function<bool()> &saveFunction)
   : wxDialog(
-      pParent,
-      wxID_ANY,
-      _("Voicing"),
-      wxDefaultPosition,
-      wxSize(1000, 520),
-      wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER),
+    pParent,
+    wxID_ANY,
+    _("Voicing"),
+    wxDefaultPosition,
+    wxSize(1000, 520),
+    wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER),
     m_SaveFunction(saveFunction),
     m_Parameter(GOPipeVoicing::GAIN),
     m_IsRefreshing(false),
