@@ -1,6 +1,6 @@
 /*
  * Copyright 2006 Milan Digital Audio LLC
- * Copyright 2009-2024 GrandOrgue contributors (see AUTHORS)
+ * Copyright 2009-2026 GrandOrgue contributors (see AUTHORS)
  * License GPL-2.0 or later
  * (https://www.gnu.org/licenses/old-licenses/gpl-2.0.html).
  */
@@ -23,7 +23,8 @@ GOPipeConfigNode::GOPipeConfigNode(
     m_parent(parent),
     m_PipeConfig(organModel, callback),
     m_StatisticCallback(statistic),
-    m_Name() {
+    m_Name(),
+    m_MidiNoteNumber(-1) {
   if (m_parent)
     m_parent->AddChild(this);
 }

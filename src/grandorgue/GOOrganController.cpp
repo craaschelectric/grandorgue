@@ -49,6 +49,7 @@
 #include "model/GOSwitch.h"
 #include "model/GOTremulant.h"
 #include "model/GOWindchest.h"
+#include "model/pipe-config/GOPipeVoicing.h"
 #include "sound/GOSoundSystem.h"
 #include "sound/playing/GOSoundReleaseAlignTable.h"
 #include "temperaments/GOTemperament.h"
@@ -350,6 +351,10 @@ void GOOrganController::LoadOrganCoreData(GOConfigReader &cfg) {
 
   for (unsigned i = 0; i < m_elementcreators.size(); i++)
     m_elementcreators[i]->Load(cfg);
+
+  // Older settings keep the voicing on the windchest, rank and organ levels.
+  // The per-pipe voicing window works on the pipes only.
+  GOPipeVoicing::foldIntoPipes(GetRootPipeConfigNode());
 
   p_OnStateButton = GetButtonControl(GOSetter::KEY_ON_STATE);
 
