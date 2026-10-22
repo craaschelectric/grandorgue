@@ -46,20 +46,10 @@ private:
   wxButton *m_VoicingButton;
   wxStaticText *m_MemoryDisplay;
   wxStaticText *m_BitDisplay;
-  wxTextCtrl *m_Amplitude;
-  wxSpinButton *m_AmplitudeSpin;
-  wxTextCtrl *m_Gain;
-  wxSpinButton *m_GainSpin;
-  wxTextCtrl *m_ManualTuning;
-  wxSpinButton *m_ManualTuningSpin;
-  wxTextCtrl *m_AutoTuningCorrection;
-  wxSpinButton *m_AutoTuningCorrectionSpin;
   wxTextCtrl *m_Delay;
   wxSpinButton *m_DelaySpin;
   wxTextCtrl *m_ReleaseLength;
   wxSpinButton *m_ReleaseLengthSpin;
-  wxTextCtrl *m_ToneBalance;
-  wxSpinButton *m_ToneBalanceSpin;
   wxComboBox *m_AudioGroup;
   wxString m_LastAudioGroup;
   wxCheckBox *m_IgnorePitch;
@@ -112,20 +102,10 @@ private:
   void OnTreeChanged(wxTreeEvent &e);
   void OnTreeUpdated(wxCommandEvent &e) { Load(false); }
   void OnVoicingClicked(wxCommandEvent &e);
-  void OnAmplitudeChanged(wxCommandEvent &e);
-  void OnAmplitudeSpinChanged(wxSpinEvent &e);
-  void OnGainChanged(wxCommandEvent &e);
-  void OnGainSpinChanged(wxSpinEvent &e);
-  void OnManualTuningChanged(wxCommandEvent &e);
-  void OnManualTuningSpinChanged(wxSpinEvent &e);
-  void OnAutoTuningCorrectionChanged(wxCommandEvent &e);
-  void OnAutoTuningCorrectionSpinChanged(wxSpinEvent &e);
   void OnDelayChanged(wxCommandEvent &e);
   void OnDelaySpinChanged(wxSpinEvent &e);
   void OnReleaseLengthChanged(wxCommandEvent &e);
   void OnReleaseLengthSpinChanged(wxSpinEvent &e);
-  void OnToneBalanceChanged(wxCommandEvent &e);
-  void OnToneBalanceSpinChanged(wxSpinEvent &e);
   void OnAudioGroupChanged(wxCommandEvent &e) { NotifyModified(); }
   void OnIgnorePitchChanged(wxCommandEvent &e) { NotifyModified(); }
   void OnBitsPerSampleChanged(wxCommandEvent &e);

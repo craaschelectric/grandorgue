@@ -1,3 +1,4 @@
+- Added a live per-pipe voicing window for gain, tuning and tone balance: changes are heard on held notes while a slider moves, with Reset and Save, and the voicing kept on windchests, ranks and the organ is moved into the pipes at load
 - Fixed MIDI player Play/Stop crashing when triggered by incoming MIDI https://github.com/GrandOrgue/grandorgue/issues/2636
 - Fixed hanging on Panic, on loading another organ, on exit and on removing an audio device in Settings https://github.com/GrandOrgue/grandorgue/issues/2606
 - Fixed Linux packages including unnecessary cpptrace/libdwarf headers and static libraries, causing RPM install conflicts with elfutils https://github.com/GrandOrgue/grandorgue/issues/2596
