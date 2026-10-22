@@ -12,6 +12,7 @@
 
 #include <wx/button.h>
 #include <wx/choice.h>
+#include <wx/gdicmn.h>
 #include <wx/msgdlg.h>
 #include <wx/panel.h>
 #include <wx/scrolwin.h>
@@ -20,7 +21,6 @@
 #include <wx/spinctrl.h>
 #include <wx/statbox.h>
 #include <wx/stattext.h>
-#include <wx/wrapsizer.h>
 
 #include "model/pipe-config/GOPipeConfigNode.h"
 
@@ -43,6 +43,8 @@ static const ParameterLimits PARAMETER_LIMITS[] = {
 };
 
 static const int NOTES_PER_OCTAVE = 12;
+static const int NOTE_SLIDER_HEIGHT = 110;
+static const int SPIN_WIDTH = 64;
 
 static wxString note_name(int midiNoteNumber) {
   static const char *const NAMES[NOTES_PER_OCTAVE]
@@ -74,7 +76,7 @@ GOVoicingDialog::GOVoicingDialog(
     wxID_ANY,
     _("Voicing"),
     wxDefaultPosition,
-    wxSize(1000, 520),
+    wxDefaultSize,
     wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER),
     m_SaveFunction(saveFunction),
     m_Parameter(GOPipeVoicing::GAIN),
@@ -94,11 +96,14 @@ GOVoicingDialog::GOVoicingDialog(
   CreateTopRow(pTop);
   pMainSizer->Add(pTop, 0, wxEXPAND | wxALL, 5);
 
+  // The note controls scroll, so the window can be small (a 1024x600 screen)
   wxScrolledWindow *const pScroll = new wxScrolledWindow(
-    this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL);
+    this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxHSCROLL | wxVSCROLL);
 
-  pScroll->SetScrollRate(0, 10);
+  pScroll->SetScrollRate(10, 10);
+  pScroll->SetMinSize(wxSize(200, 150));
   CreateNoteControls(pScroll);
+  pScroll->FitInside();
   pMainSizer->Add(pScroll, 1, wxEXPAND | wxLEFT | wxRIGHT, 5);
 
   wxBoxSizer *const pButtons = new wxBoxSizer(wxHORIZONTAL);
@@ -110,6 +115,12 @@ GOVoicingDialog::GOVoicingDialog(
   pButtons->Add(p_SaveButton, 0, wxALL, 5);
   pMainSizer->Add(pButtons, 0, wxEXPAND | wxALL, 5);
   SetSizer(pMainSizer);
+
+  const wxRect displayRect = wxGetClientDisplayRect();
+
+  SetSize(
+    std::min(1000, displayRect.width - 16),
+    std::min(560, displayRect.height - 60));
 
   p_ResetButton->Bind(wxEVT_BUTTON, [this](wxCommandEvent &) { OnReset(); });
   p_SaveButton->Bind(wxEVT_BUTTON, [this](wxCommandEvent &) { OnSave(); });
@@ -143,7 +154,7 @@ void GOVoicingDialog::CreateTopRow(wxPanel *pPanel) {
     wxALIGN_CENTER_VERTICAL | wxRIGHT,
     5);
   p_MasterSlider = new wxSlider(
-    pPanel, wxID_ANY, 0, -1, 1, wxDefaultPosition, wxSize(260, -1));
+    pPanel, wxID_ANY, 0, -1, 1, wxDefaultPosition, wxSize(200, -1));
   p_MasterSpin = new wxSpinCtrlDouble(
     pPanel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(80, -1));
   p_MasterSlider->Bind(wxEVT_SLIDER, [this](wxCommandEvent &) {
@@ -159,7 +170,7 @@ void GOVoicingDialog::CreateTopRow(wxPanel *pPanel) {
 }
 
 void GOVoicingDialog::CreateNoteControls(wxWindow *pParent) {
-  wxWrapSizer *const pOctaves = new wxWrapSizer(wxHORIZONTAL);
+  wxBoxSizer *const pOctaves = new wxBoxSizer(wxVERTICAL);
   const std::vector<int> notes = m_Voicing.GetNotes();
   const unsigned nNotes = notes.size();
   unsigned noteI = 0;
@@ -167,6 +178,7 @@ void GOVoicingDialog::CreateNoteControls(wxWindow *pParent) {
   m_NoteControls.reserve(nNotes);
   while (noteI < nNotes) {
     const int octave = notes[noteI] / NOTES_PER_OCTAVE;
+    const unsigned octaveI = m_OctaveControls.size();
     wxStaticBoxSizer *const pBox = new wxStaticBoxSizer(
       wxVERTICAL, pParent, wxString::Format(_("Octave %d"), octave - 1));
     wxWindow *const pBoxWindow = pBox->GetStaticBox();
@@ -181,6 +193,8 @@ void GOVoicingDialog::CreateNoteControls(wxWindow *pParent) {
       NoteControls noteControls;
 
       noteControls.midiNoteNumber = notes[noteI];
+      noteControls.octaveI = octaveI;
+      noteControls.shownOffset = std::nan("");
       noteControls.p_Slider = new wxSlider(
         pBoxWindow,
         wxID_ANY,
@@ -188,22 +202,29 @@ void GOVoicingDialog::CreateNoteControls(wxWindow *pParent) {
         -1,
         1,
         wxDefaultPosition,
-        wxSize(-1, 130),
+        wxSize(-1, NOTE_SLIDER_HEIGHT),
         wxSL_VERTICAL | wxSL_INVERSE);
       noteControls.p_Spin = new wxSpinCtrlDouble(
-        pBoxWindow, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(72, -1));
+        pBoxWindow,
+        wxID_ANY,
+        wxEmptyString,
+        wxDefaultPosition,
+        wxSize(SPIN_WIDTH, -1));
       noteControls.p_Slider->Bind(
         wxEVT_SLIDER, [this, noteControlI](wxCommandEvent &) {
           OnNoteChanged(
             noteControlI,
             slider_to_offset(
               m_NoteControls[noteControlI].p_Slider->GetValue(),
-              PARAMETER_LIMITS[m_Parameter]));
+              PARAMETER_LIMITS[m_Parameter]),
+            m_NoteControls[noteControlI].p_Slider);
         });
       noteControls.p_Spin->Bind(
         wxEVT_SPINCTRLDOUBLE, [this, noteControlI](wxSpinDoubleEvent &) {
           OnNoteChanged(
-            noteControlI, m_NoteControls[noteControlI].p_Spin->GetValue());
+            noteControlI,
+            m_NoteControls[noteControlI].p_Spin->GetValue(),
+            m_NoteControls[noteControlI].p_Spin);
         });
       pColumn->Add(
         new wxStaticText(pBoxWindow, wxID_ANY, note_name(notes[noteI])),
@@ -218,7 +239,6 @@ void GOVoicingDialog::CreateNoteControls(wxWindow *pParent) {
       = m_NoteControls.size() - octaveControls.firstNoteControlI;
 
     // QUICK: the left and the right end of a linear ramp over the octave
-    const unsigned octaveI = m_OctaveControls.size();
     wxBoxSizer *const pQuick = new wxBoxSizer(wxHORIZONTAL);
 
     octaveControls.p_LeftQuick = new wxSlider(
@@ -240,7 +260,7 @@ void GOVoicingDialog::CreateNoteControls(wxWindow *pParent) {
     pQuick->Add(octaveControls.p_RightQuick, 1);
     pBox->Add(pNotesRow, 1, wxEXPAND);
     pBox->Add(pQuick, 0, wxEXPAND | wxTOP, 3);
-    pOctaves->Add(pBox, 0, wxALL, 3);
+    pOctaves->Add(pBox, 0, wxEXPAND | wxALL, 3);
     m_OctaveControls.push_back(octaveControls);
   }
   pParent->SetSizer(pOctaves);
@@ -257,6 +277,8 @@ void GOVoicingDialog::ApplyParameterLimits() {
   p_MasterSpin->SetIncrement(limits.spinStep);
   p_MasterSpin->SetDigits(limits.nDigits);
   for (NoteControls &noteControls : m_NoteControls) {
+    // another parameter is shown now, so every control must be updated
+    noteControls.shownOffset = std::nan("");
     noteControls.p_Slider->SetRange(-sliderMax, sliderMax);
     noteControls.p_Spin->SetRange(-limits.spinLimit, limits.spinLimit);
     noteControls.p_Spin->SetIncrement(limits.spinStep);
@@ -269,37 +291,58 @@ void GOVoicingDialog::ApplyParameterLimits() {
   m_IsRefreshing = wasRefreshing;
 }
 
-void GOVoicingDialog::RefreshNote(unsigned noteControlI) {
+void GOVoicingDialog::RefreshNote(
+  unsigned noteControlI, const wxWindow *pSource) {
   NoteControls &noteControls = m_NoteControls[noteControlI];
   const double offset
     = m_Voicing.GetOffset(m_Parameter, noteControls.midiNoteNumber);
 
-  noteControls.p_Slider->SetValue(
-    offset_to_slider(offset, PARAMETER_LIMITS[m_Parameter]));
-  noteControls.p_Spin->SetValue(offset);
+  // Writing a control is slow, so only the controls with a new value are
+  // written, and never the one the user is moving
+  if (offset != noteControls.shownOffset) {
+    const int sliderValue
+      = offset_to_slider(offset, PARAMETER_LIMITS[m_Parameter]);
+
+    noteControls.shownOffset = offset;
+    if (
+      pSource != noteControls.p_Slider
+      && noteControls.p_Slider->GetValue() != sliderValue)
+      noteControls.p_Slider->SetValue(sliderValue);
+    if (pSource != noteControls.p_Spin)
+      noteControls.p_Spin->SetValue(offset);
+  }
+}
+
+void GOVoicingDialog::RefreshQuick(unsigned octaveI) {
+  const OctaveControls &octaveControls = m_OctaveControls[octaveI];
+  const ParameterLimits &limits = PARAMETER_LIMITS[m_Parameter];
+  const unsigned lastI
+    = octaveControls.firstNoteControlI + octaveControls.nNoteControls - 1;
+  const int leftValue = offset_to_slider(
+    m_Voicing.GetOffset(
+      m_Parameter,
+      m_NoteControls[octaveControls.firstNoteControlI].midiNoteNumber),
+    limits);
+  const int rightValue = offset_to_slider(
+    m_Voicing.GetOffset(m_Parameter, m_NoteControls[lastI].midiNoteNumber),
+    limits);
+
+  if (octaveControls.p_LeftQuick->GetValue() != leftValue)
+    octaveControls.p_LeftQuick->SetValue(leftValue);
+  if (octaveControls.p_RightQuick->GetValue() != rightValue)
+    octaveControls.p_RightQuick->SetValue(rightValue);
 }
 
 void GOVoicingDialog::RefreshAll() {
-  const ParameterLimits &limits = PARAMETER_LIMITS[m_Parameter];
-
   m_IsRefreshing = true;
   for (unsigned nNoteControls = m_NoteControls.size(), noteControlI = 0;
        noteControlI < nNoteControls;
        noteControlI++)
     RefreshNote(noteControlI);
-  for (OctaveControls &octaveControls : m_OctaveControls) {
-    const unsigned lastI
-      = octaveControls.firstNoteControlI + octaveControls.nNoteControls - 1;
-
-    octaveControls.p_LeftQuick->SetValue(offset_to_slider(
-      m_Voicing.GetOffset(
-        m_Parameter,
-        m_NoteControls[octaveControls.firstNoteControlI].midiNoteNumber),
-      limits));
-    octaveControls.p_RightQuick->SetValue(offset_to_slider(
-      m_Voicing.GetOffset(m_Parameter, m_NoteControls[lastI].midiNoteNumber),
-      limits));
-  }
+  for (unsigned nOctaves = m_OctaveControls.size(), octaveI = 0;
+       octaveI < nOctaves;
+       octaveI++)
+    RefreshQuick(octaveI);
   p_ResetButton->Enable(m_Voicing.IsModified());
   m_IsRefreshing = false;
 }
@@ -324,13 +367,17 @@ void GOVoicingDialog::OnMasterChanged(double offset) {
   }
 }
 
-void GOVoicingDialog::OnNoteChanged(unsigned noteControlI, double offset) {
+void GOVoicingDialog::OnNoteChanged(
+  unsigned noteControlI, double offset, const wxWindow *pSource) {
   if (!m_IsRefreshing) {
+    const unsigned octaveI = m_NoteControls[noteControlI].octaveI;
+
     m_Voicing.SetOffset(
       m_Parameter, m_NoteControls[noteControlI].midiNoteNumber, (float)offset);
     m_IsRefreshing = true;
-    RefreshNote(noteControlI);
-    p_ResetButton->Enable(m_Voicing.IsModified());
+    RefreshNote(noteControlI, pSource);
+    RefreshQuick(octaveI);
+    p_ResetButton->Enable();
     m_IsRefreshing = false;
   }
 }
@@ -348,7 +395,13 @@ void GOVoicingDialog::OnQuickChanged(unsigned octaveI) {
       m_NoteControls[lastI].midiNoteNumber,
       (float)slider_to_offset(octaveControls.p_LeftQuick->GetValue(), limits),
       (float)slider_to_offset(octaveControls.p_RightQuick->GetValue(), limits));
-    RefreshAll();
+    m_IsRefreshing = true;
+    for (unsigned noteControlI = octaveControls.firstNoteControlI;
+         noteControlI <= lastI;
+         noteControlI++)
+      RefreshNote(noteControlI);
+    p_ResetButton->Enable();
+    m_IsRefreshing = false;
   }
 }
 

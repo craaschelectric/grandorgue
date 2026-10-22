@@ -22,6 +22,7 @@ class wxPanel;
 class wxSlider;
 class wxSpinCtrlDouble;
 class wxStaticText;
+class wxWindow;
 
 class GOPipeConfigNode;
 
@@ -37,8 +38,11 @@ private:
   // The controls of one pipe note
   struct NoteControls {
     int midiNoteNumber;
+    unsigned octaveI;
     wxSlider *p_Slider;
     wxSpinCtrlDouble *p_Spin;
+    // the offset the two controls show now. NaN forces an update
+    double shownOffset;
   };
 
   // The quick ramp controls of the octave that is made of
@@ -73,11 +77,15 @@ private:
   void ApplyParameterLimits();
   // Reads all the controls from the pipes
   void RefreshAll();
-  void RefreshNote(unsigned noteControlI);
+  // Updates the controls of the note that show another value than the pipes
+  // have. The control pSource is not touched because the user is using it
+  void RefreshNote(unsigned noteControlI, const wxWindow *pSource = nullptr);
+  void RefreshQuick(unsigned octaveI);
 
   void OnParameterChanged();
   void OnMasterChanged(double offset);
-  void OnNoteChanged(unsigned noteControlI, double offset);
+  void OnNoteChanged(
+    unsigned noteControlI, double offset, const wxWindow *pSource);
   void OnQuickChanged(unsigned octaveI);
   void OnReset();
   void OnSave();

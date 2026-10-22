@@ -695,7 +695,35 @@ void GOAppWindow::OnIsModifiedChanged(bool modified) {
   UpdatePanelMenu();
 }
 
+wxString GOAppWindow::GetPanelMenuSignature() const {
+  const unsigned panelcount = mp_organ
+    ? std::min(
+      mp_organ->GetPanelCount(), (unsigned)(ID_PANEL_LAST - ID_PANEL_FIRST))
+    : 0;
+  wxString signature;
+
+  for (unsigned i = 0; i < panelcount; i++) {
+    GOGUIPanel *panel = mp_organ->GetPanel(i);
+
+    signature += panel->GetGroupName() + wxT("|") + panel->GetName()
+      + (mp_organ->WindowExists(GOGuiOrgan::PANEL, panel) ? wxT("+") : wxT("-"))
+      + wxT("\n");
+  }
+  return signature;
+}
+
 void GOAppWindow::UpdatePanelMenu() {
+  // It is called after every change of the organ model, e.g. for every pipe
+  // moved by a voicing slider, so rebuilding the menu each time would be slow
+  const wxString signature = GetPanelMenuSignature();
+
+  if (signature != m_PanelMenuSignature) {
+    m_PanelMenuSignature = signature;
+    RebuildPanelMenu();
+  }
+}
+
+void GOAppWindow::RebuildPanelMenu() {
   unsigned panelcount = mp_organ ? mp_organ->GetPanelCount() : 0;
   panelcount = std::min(panelcount, (unsigned)(ID_PANEL_LAST - ID_PANEL_FIRST));
 
