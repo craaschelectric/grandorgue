@@ -8,6 +8,8 @@
 #ifndef GOORGANSETTINSDIALOG_H
 #define GOORGANSETTINSDIALOG_H
 
+#include <functional>
+
 #include <wx/event.h>
 
 #include "gui/document-base/GODocumentView.h"
@@ -34,8 +36,15 @@ private:
   GOOrganSettingsEnclosuresTab *m_EnclosuresTab;
 
 public:
+  /**
+   * @param saveFunction writes the settings file. It is used by the voicing
+   *   window. Returns true on success
+   */
   GOOrganSettingsDialog(
-    GOOrganModel &organModel, GODocumentBase *doc, wxWindow *parent);
+    GOOrganModel &organModel,
+    GODocumentBase *doc,
+    wxWindow *parent,
+    const std::function<bool()> &saveFunction);
 
 private:
   void ButtonStatesChanged() override;

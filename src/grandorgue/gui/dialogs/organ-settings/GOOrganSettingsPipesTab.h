@@ -8,6 +8,7 @@
 #ifndef GOORGANSETTINGSPIPESTAB_H
 #define GOORGANSETTINGSPIPESTAB_H
 
+#include <functional>
 #include <utility>
 #include <vector>
 
@@ -16,6 +17,7 @@
 
 #include "GOOrganSettingsTab.h"
 
+class wxButton;
 class wxCheckBox;
 class wxChoice;
 class wxComboBox;
@@ -38,7 +40,10 @@ private:
   GOConfig &r_config;
   GOPipeConfigNode &r_RootNode;
 
+  std::function<bool()> m_SaveFunction;
+
   wxTreeCtrl *m_Tree;
+  wxButton *m_VoicingButton;
   wxStaticText *m_MemoryDisplay;
   wxStaticText *m_BitDisplay;
   wxTextCtrl *m_Amplitude;
@@ -106,6 +111,7 @@ private:
   void OnTreeChanging(wxTreeEvent &e);
   void OnTreeChanged(wxTreeEvent &e);
   void OnTreeUpdated(wxCommandEvent &e) { Load(false); }
+  void OnVoicingClicked(wxCommandEvent &e);
   void OnAmplitudeChanged(wxCommandEvent &e);
   void OnAmplitudeSpinChanged(wxSpinEvent &e);
   void OnGainChanged(wxCommandEvent &e);
@@ -130,8 +136,14 @@ private:
   void OnReleaseLoadChanged(wxCommandEvent &e);
 
 public:
+  /**
+   * @param saveFunction writes the settings file. It is used by the voicing
+   *   window. Returns true on success
+   */
   GOOrganSettingsPipesTab(
-    GOOrganModel &organModel, GOOrganSettingsDialogBase *pDlg);
+    GOOrganModel &organModel,
+    GOOrganSettingsDialogBase *pDlg,
+    const std::function<bool()> &saveFunction);
 
   void DistributeAudio() override;
   void ResetToDefault() override;

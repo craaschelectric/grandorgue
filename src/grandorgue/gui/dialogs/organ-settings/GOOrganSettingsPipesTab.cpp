@@ -9,6 +9,7 @@
 
 #include <set>
 
+#include <wx/button.h>
 #include <wx/checkbox.h>
 #include <wx/choicdlg.h>
 #include <wx/choice.h>
@@ -26,6 +27,7 @@
 
 #include "GOEvent.h"
 #include "GOSampleStatistic.h"
+#include "GOVoicingDialog.h"
 
 static constexpr unsigned RELEASE_LENGTH_MAX = 3000;
 static constexpr unsigned RELEASE_LENGTH_STEP = 50;
@@ -46,6 +48,7 @@ public:
 
 enum {
   ID_EVENT_TREE = 200,
+  ID_EVENT_VOICING,
   ID_EVENT_AMPLITUDE,
   ID_EVENT_AMPLITUDE_SPIN,
   ID_EVENT_GAIN,
@@ -102,6 +105,7 @@ EVT_SPIN(
 EVT_TEXT(ID_EVENT_TONE_BALANCE, GOOrganSettingsPipesTab::OnToneBalanceChanged)
 EVT_SPIN(
   ID_EVENT_TONE_BALANCE_SPIN, GOOrganSettingsPipesTab::OnToneBalanceSpinChanged)
+EVT_BUTTON(ID_EVENT_VOICING, GOOrganSettingsPipesTab::OnVoicingClicked)
 EVT_TEXT(ID_EVENT_AUDIO_GROUP, GOOrganSettingsPipesTab::OnAudioGroupChanged)
 EVT_CHECKBOX(
   ID_EVENT_IGNORE_PITCH, GOOrganSettingsPipesTab::OnIgnorePitchChanged)
@@ -115,11 +119,14 @@ EVT_CHOICE(ID_EVENT_RELEASE_LOAD, GOOrganSettingsPipesTab::OnReleaseLoadChanged)
 END_EVENT_TABLE()
 
 GOOrganSettingsPipesTab::GOOrganSettingsPipesTab(
-  GOOrganModel &organModel, GOOrganSettingsDialogBase *pDlg)
+  GOOrganModel &organModel,
+  GOOrganSettingsDialogBase *pDlg,
+  const std::function<bool()> &saveFunction)
   : GOOrganSettingsTab(pDlg, WX_TAB_CODE, WX_TAB_TITLE),
     r_OrganModel(organModel),
     r_config(organModel.GetConfig()),
     r_RootNode(organModel.GetRootPipeConfigNode()),
+    m_SaveFunction(saveFunction),
     p_LastTreeItemData(nullptr),
     m_LoadChangeCnt(0) {
   wxGridBagSizer *const mainSizer = new wxGridBagSizer(5, 5);
@@ -391,7 +398,38 @@ GOOrganSettingsPipesTab::GOOrganSettingsPipesTab(
   mainSizer->Add(
     box1, wxGBPosition(2, 1), wxDefaultSpan, wxEXPAND | wxRIGHT, 5);
 
+  m_VoicingButton
+    = new wxButton(this, ID_EVENT_VOICING, _("Voicing for selected..."));
+  mainSizer->Add(
+    m_VoicingButton,
+    wxGBPosition(3, 1),
+    wxDefaultSpan,
+    wxALIGN_LEFT | wxALIGN_TOP | wxRIGHT,
+    5);
+
   SetSizerAndFit(mainSizer);
+}
+
+void GOOrganSettingsPipesTab::OnVoicingClicked(wxCommandEvent &e) {
+  wxArrayTreeItemIds selectedItemIds;
+  std::vector<GOPipeConfigNode *> mpNodes;
+
+  m_Tree->GetSelections(selectedItemIds);
+  for (const wxTreeItemId &itemId : selectedItemIds) {
+    const TreeItemData *pData = (TreeItemData *)m_Tree->GetItemData(itemId);
+
+    if (pData)
+      mpNodes.push_back(&pData->r_node);
+  }
+  if (mpNodes.empty())
+    wxMessageBox(
+      _("Select a rank, a windchest or the organ in the tree first"),
+      _("Voicing"),
+      wxOK | wxICON_INFORMATION,
+      this);
+  else
+    (new GOVoicingDialog(wxGetTopLevelParent(this), mpNodes, m_SaveFunction))
+      ->Show();
 }
 
 static const wxString WX_SPACE = wxT(" ");
