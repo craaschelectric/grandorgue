@@ -694,8 +694,7 @@ std::vector<float> GOTestSoundOrganEngine::RunLiveChangeScenario(
 void GOTestSoundOrganEngine::TestPlayingSamplerFollowsProviderChanges() {
   static constexpr unsigned CHANGE_PERIOD_I = 50;
   // The fader changes the volume smoothly in 1024 frames
-  static constexpr unsigned RAMP_PERIODS
-    = 1024 / N_SAMPLES_PER_BUFFER + 2;
+  static constexpr unsigned RAMP_PERIODS = 1024 / N_SAMPLES_PER_BUFFER + 2;
   static constexpr unsigned FIRST_SETTLED_PERIOD_I
     = CHANGE_PERIOD_I + RAMP_PERIODS;
 
@@ -758,8 +757,7 @@ void GOTestSoundOrganEngine::TestPlayingSamplerFollowsProviderChanges() {
       nCheckedPeriods++;
     }
   }
-  GOAssert(
-    nCheckedPeriods > 20, "the sample must be audible after the change");
+  GOAssert(nCheckedPeriods > 20, "the sample must be audible after the change");
 
   // the gain must change gradually: in the period of the change the same
   // samples are scaled by a factor between 1.0 and 0.5, so the energy is

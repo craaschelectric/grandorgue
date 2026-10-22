@@ -44,6 +44,16 @@ private:
    * case actually changes the audio. */
   void TestStateProcessBufferFilters();
 
+  /** A State bound to a filter takes over the coefficients that are set by
+   * Init() after the binding, at the next IsToApply(); its carried memory is
+   * cleared when the filter is switched off. */
+  void TestStateFollowsFilterChanges();
+
+  /** While another thread changes the filter in a loop, the coefficients that
+   * a State uses are always one complete set that was written by Init() and
+   * never a mix of two sets. */
+  void TestStateNeverSeesTornCoefficients();
+
 public:
   std::string GetName() override { return TEST_NAME; }
   void run() override;
