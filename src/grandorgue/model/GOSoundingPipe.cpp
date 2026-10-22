@@ -56,7 +56,9 @@ GOSoundingPipe::GOSoundingPipe(
     m_IsTemperamentOriginalBased(true),
     m_SoundProvider(this),
     m_PipeConfigNode(
-      &rank->GetPipeConfig(), *pOrganModel, this, &m_SoundProvider) {}
+      &rank->GetPipeConfig(), *pOrganModel, this, &m_SoundProvider) {
+  m_PipeConfigNode.SetMidiNoteNumber(m_MidiKeyNumber);
+}
 
 void GOSoundingPipe::Init(
   GOConfigReader &cfg,

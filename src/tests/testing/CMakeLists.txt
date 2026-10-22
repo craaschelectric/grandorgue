@@ -7,6 +7,7 @@ set(go_tests
     model/GOTestDrawStop.cpp
     model/GOTestOrganModel.cpp
     model/GOTestPipeConfigTreeNode.cpp
+    model/GOTestPipeVoicing.cpp
     model/GOTestSoundingPipe.cpp
     model/GOTestSwitch.cpp
     model/GOTestWindchest.cpp
