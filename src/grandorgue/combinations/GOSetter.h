@@ -153,7 +153,8 @@ public:
 
     ID_SETTER_ON,
     ID_SETTER_AUDIO_PANIC,
-    ID_SETTER_FILE_EXIT
+    ID_SETTER_FILE_EXIT,
+    ID_SETTER_SHUTDOWN
   };
   // indexed by the enum
   static const ButtonDefinitionEntry *const P_BUTTON_DEFS;

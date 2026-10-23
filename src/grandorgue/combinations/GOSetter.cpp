@@ -727,6 +727,12 @@ static const GOElementCreator::ButtonDefinitionEntry BUTTON_DEFS[] = {
    true,
    true,
    &MIDI_CONTEXT_SETTER},
+  {wxT("ShutdownComputer"),
+   GOSetter::ID_SETTER_SHUTDOWN,
+   true,
+   true,
+   true,
+   &MIDI_CONTEXT_SETTER},
 
   {wxT(""), -1, false, false, false}};
 
@@ -891,6 +897,8 @@ void GOSetter::Load(GOConfigReader &cfg) {
   m_buttons[ID_SETTER_AUDIO_PANIC]->Init(cfg, wxT("AudioPanic"), _("Panic"));
   m_buttons[ID_SETTER_FILE_EXIT]->Init(
     cfg, wxT("ExitGO"), _("Exit GrandOrgue"));
+  m_buttons[ID_SETTER_SHUTDOWN]->Init(
+    cfg, wxT("ShutdownComputer"), _("Shut down computer"));
 
   m_CrescendoCtrl.Init(cfg, wxT("SetterSwell"), _("Crescendo"), 0);
 
@@ -1440,6 +1448,10 @@ void GOSetter::ButtonStateChanged(int id, bool newState) {
   } break;
   case ID_SETTER_FILE_EXIT: {
     wxCommandEvent event(wxEVT_MENU, ID_FILE_EXIT);
+    wxTheApp->GetTopWindow()->GetEventHandler()->AddPendingEvent(event);
+  } break;
+  case ID_SETTER_SHUTDOWN: {
+    wxCommandEvent event(wxEVT_MENU, ID_FILE_SHUTDOWN);
     wxTheApp->GetTopWindow()->GetEventHandler()->AddPendingEvent(event);
   } break;
   }

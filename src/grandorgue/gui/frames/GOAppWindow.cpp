@@ -89,6 +89,7 @@ EVT_MENU_RANGE(ID_LOAD_LRU_FIRST, ID_LOAD_LRU_LAST, GOAppWindow::OnLoadRecent)
 EVT_MENU(ID_FILE_SAVE, GOAppWindow::OnSave)
 EVT_MENU(ID_FILE_CLOSE, GOAppWindow::OnMenuClose)
 EVT_MENU(ID_FILE_EXIT, GOAppWindow::OnExit)
+EVT_MENU(ID_FILE_SHUTDOWN, GOAppWindow::OnShutdownComputer)
 EVT_MENU(ID_FILE_RELOAD, GOAppWindow::OnReload)
 EVT_MENU(ID_FILE_REVERT, GOAppWindow::OnRevert)
 EVT_MENU(ID_FILE_PROPERTIES, GOAppWindow::OnProperties)
@@ -623,8 +624,17 @@ bool GOAppWindow::CloseOrgan(bool isForce) {
   bool isClosed = true;
 
   if (mp_organ) {
-    if (p_OrganController && p_OrganController->IsOrganModified()) {
-      int choice = isForce ? wxYES
+    // The changes are normally already written by the autosave. Write the
+    // remaining ones without asking.
+    // Unconfirmed changes (an open voicing window) are never written without
+    // asking, even when forced.
+    const bool isHeld
+      = p_OrganController && p_OrganController->IsAutoSaveHeld();
+
+    if (
+      p_OrganController && p_OrganController->IsOrganModified()
+      && (isHeld || !p_OrganController->AutoSave())) {
+      int choice = isForce ? (isHeld ? wxNO : wxYES)
                            : wxMessageBox(
                              _("The organ settings have been modified\n"
                                "Do you want to save them?"),
@@ -693,6 +703,18 @@ void GOAppWindow::OnIsModifiedChanged(bool modified) {
   if (p_OrganController)
     UpdateReleaseLength(p_OrganController->GetReleaseTail());
   UpdatePanelMenu();
+  // Changes may come from any thread, but the file is written on the main
+  // thread, once for all the changes made until it runs
+  if (modified && !m_IsAutoSavePending.exchange(true))
+    CallAfter(&GOAppWindow::RunAutoSave);
+}
+
+void GOAppWindow::RunAutoSave() {
+  m_IsAutoSavePending = false;
+  if (
+    p_OrganController && p_OrganController->IsOrganModified()
+    && !p_OrganController->IsAutoSaveHeld())
+    p_OrganController->AutoSave();
 }
 
 wxString GOAppWindow::GetPanelMenuSignature() const {
@@ -1138,6 +1160,13 @@ bool GOAppWindow::CloseProgram(bool isForce) {
 }
 
 void GOAppWindow::OnExit(wxCommandEvent &event) { CloseProgram(); }
+
+void GOAppWindow::OnShutdownComputer(wxCommandEvent &event) {
+  // The settings are saved by CloseOrgan(). Do not shut down under an open
+  // settings dialog.
+  if (!m_InSettings && CloseProgram(true))
+    r_app.SetToShutDownAfterExit();
+}
 
 void GOAppWindow::OnCloseWindow(wxCloseEvent &event) {
   CloseProgram(!event.CanVeto());

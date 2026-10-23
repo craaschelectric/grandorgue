@@ -38,7 +38,8 @@ GOOrganSettingsDialog::GOOrganSettingsDialog(
   GOOrganModel &organModel,
   GODocumentBase *doc,
   wxWindow *parent,
-  const std::function<bool()> &saveFunction)
+  const std::function<bool()> &saveFunction,
+  const std::function<void(bool)> &holdAutoSaveFunction)
   : GOOrganSettingsDialogBase(
     parent,
     wxT("Organ settings"),
@@ -75,7 +76,8 @@ GOOrganSettingsDialog::GOOrganSettingsDialog(
   }
 
   // Don't move above because adding tabs raises events that require buttons
-  m_PipesTab = new GOOrganSettingsPipesTab(organModel, this, saveFunction);
+  m_PipesTab = new GOOrganSettingsPipesTab(
+    organModel, this, saveFunction, holdAutoSaveFunction);
   AddTab(m_PipesTab);
 
   m_EnclosuresTab = new GOOrganSettingsEnclosuresTab(organModel, this);

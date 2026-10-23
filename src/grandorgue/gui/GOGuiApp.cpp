@@ -15,6 +15,7 @@
 #include <wx/filesys.h>
 #include <wx/fs_zip.h>
 #include <wx/regex.h>
+#include <wx/utils.h>
 
 #include "config/GOConfig.h"
 #include "frames/GOAppWindow.h"
@@ -219,6 +220,24 @@ void GOGuiApp::MacOpenFile(const wxString &filename) {
 
 int GOGuiApp::OnRun() { return wxApp::OnRun(); }
 
+/**
+ * Asks the operating system to power the computer off. On Linux it first tries
+ * systemctl and then sudo without a password; the system may need a polkit rule
+ * or a sudoers entry that allows the user to power off.
+ */
+static void power_off_computer() {
+#if defined(__WXMSW__)
+  wxExecute(wxT("shutdown /s /t 0"), wxEXEC_SYNC);
+#elif defined(__WXMAC__)
+  wxExecute(
+    wxT("osascript -e 'tell application \"System Events\" to shut down'"),
+    wxEXEC_SYNC);
+#else
+  if (wxExecute(wxT("systemctl poweroff"), wxEXEC_SYNC) != 0)
+    wxExecute(wxT("sudo -n systemctl poweroff"), wxEXEC_SYNC);
+#endif
+}
+
 int GOGuiApp::OnExit() {
   wxLog::FlushActive();
   wxLog::SetActiveTarget(nullptr);
@@ -230,6 +249,8 @@ int GOGuiApp::OnExit() {
 
     wxExecute(cmdargs);
   }
+  if (m_IsToShutDownAfterExit)
+    power_off_computer();
   return rc;
 }
 

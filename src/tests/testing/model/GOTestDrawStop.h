@@ -36,8 +36,24 @@ private:
     std::string GetName() override { return TEST_NAME; }
   };
 
+  class TestSavedState : public GOCommonControllerTest {
+  private:
+    static std::string TEST_NAME;
+
+    /*
+     * An explicit save writes the live state of a switch, an autosave keeps
+     * the state that was last saved.
+     */
+    void TestAutosaveKeepsSavedState();
+
+  public:
+    virtual void run() override;
+    std::string GetName() override { return TEST_NAME; }
+  };
+
   TestFunctions testFunctions;
   TestInternalState testInternalState;
+  TestSavedState testSavedState;
 };
 
 #endif /* GOTESTDRAWSTOP_H */

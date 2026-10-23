@@ -35,6 +35,7 @@ class GOSoundSystem;
 class GOGuiApp : public wxApp {
 private:
   bool m_IsToRestartAfterExit = false;
+  bool m_IsToShutDownAfterExit = false;
 
 #ifdef __WXMAC__
   virtual void MacOpenFile(const wxString &fileName) override;
@@ -72,6 +73,10 @@ public:
 
   bool IsToRestartAfterExit() const { return m_IsToRestartAfterExit; }
   void SetToRestartAfterExit() { m_IsToRestartAfterExit = true; }
+  /**
+   * Asks to power the computer off after GrandOrgue has exited cleanly.
+   */
+  void SetToShutDownAfterExit() { m_IsToShutDownAfterExit = true; }
 };
 
 DECLARE_APP(GOGuiApp)

@@ -45,6 +45,9 @@ public:
     // indexed by CouplerType
     std::vector<GOCoupler *> m_CouplerPtrs;
     std::unique_ptr<GOCallbackButtonControl> m_ButtonCoupleThrough;
+    // The state that was loaded or last explicitly saved. The autosave writes
+    // it instead of the live state.
+    bool m_IsSavedCoupleThrough = false;
   };
 
 private:

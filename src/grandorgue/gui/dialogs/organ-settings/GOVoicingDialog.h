@@ -56,6 +56,7 @@ private:
 
   GOPipeVoicing m_Voicing;
   std::function<bool()> m_SaveFunction;
+  std::function<void(bool)> m_HoldAutoSaveFunction;
   GOPipeVoicing::Parameter m_Parameter;
   // true while the controls are being updated from the model, so that they
   // do not write back
@@ -96,11 +97,17 @@ public:
    * @param pParent the parent window. The dialog is destroyed with it
    * @param mpNodes the selected config nodes. The first one is displayed
    * @param saveFunction writes the settings file; returns true on success
+   * @param holdAutoSaveFunction holds the autosave of the settings file while
+   *   the window is open, so that the voicing changes reach the file only when
+   *   the user saves them. It is called with true when the window opens and
+   *   with false when it is destroyed
    */
   GOVoicingDialog(
     wxWindow *pParent,
     const std::vector<GOPipeConfigNode *> &mpNodes,
-    const std::function<bool()> &saveFunction);
+    const std::function<bool()> &saveFunction,
+    const std::function<void(bool)> &holdAutoSaveFunction);
+  ~GOVoicingDialog();
 };
 
 #endif /* GOVOICINGDIALOG_H */

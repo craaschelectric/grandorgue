@@ -33,6 +33,9 @@ private:
 
   uint8_t m_AmpMinimumLevel;
   uint8_t m_MIDIValue;
+  // The value that was loaded or last explicitly saved. The autosave writes it
+  // instead of the live position.
+  uint8_t m_SavedMIDIValue;
 
   void OnMidiReceived(
     const GOMidiEvent &event,

@@ -237,9 +237,19 @@ void GOGuiOrgan::ShowOrganSettingsDialog() {
     registerWindow(
       GOGuiOrgan::ORGAN_DIALOG,
       NULL,
-      new GOOrganSettingsDialog(*mp_controller, this, nullptr, [this]() {
-        return mp_controller && mp_controller->Save();
-      }));
+      new GOOrganSettingsDialog(
+        *mp_controller,
+        this,
+        nullptr,
+        [this]() { return mp_controller && mp_controller->AutoSave(); },
+        [this](bool isHeld) {
+          if (mp_controller) {
+            if (isHeld)
+              mp_controller->HoldAutoSave();
+            else
+              mp_controller->ReleaseAutoSave();
+          }
+        }));
   }
 }
 

@@ -98,6 +98,11 @@ GOGUIPanel *GOGUIMasterPanel::CreateMasterPanel(GOConfigReader &cfg) {
   panel->AddControl(button);
 
   button = new GOGUIButton(
+    panel, m_OrganController->GetButtonControl(wxT("ShutdownComputer")), false);
+  button->Init(cfg, wxT("SetterShutdown"), 5, 102);
+  panel->AddControl(button);
+
+  button = new GOGUIButton(
     panel, m_OrganController->GetButtonControl(GOSetter::KEY_ON_STATE), true);
   button->Init(cfg, wxT("SetterOn"), 1, 100, 4);
   panel->AddControl(button);

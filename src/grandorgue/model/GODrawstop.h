@@ -1,6 +1,6 @@
 /*
  * Copyright 2006 Milan Digital Audio LLC
- * Copyright 2009-2025 GrandOrgue contributors (see AUTHORS)
+ * Copyright 2009-2026 GrandOrgue contributors (see AUTHORS)
  * License GPL-2.0 or later
  * (https://www.gnu.org/licenses/old-licenses/gpl-2.0.html).
  */
@@ -31,6 +31,11 @@ public:
 private:
   GOFunctionType m_Type;
   int m_GCState;
+  /**
+   * The engaged state that was loaded from the settings file or was last
+   * explicitly saved. The autosave writes it instead of the live state.
+   */
+  bool m_SavedEngaged;
   std::unordered_map<wxString, bool, wxStringHash, wxStringEqual>
     m_InternalStates;
   std::vector<GODrawstop *> m_ControlledDrawstops;

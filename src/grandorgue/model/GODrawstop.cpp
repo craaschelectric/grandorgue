@@ -1,6 +1,6 @@
 /*
  * Copyright 2006 Milan Digital Audio LLC
- * Copyright 2009-2025 GrandOrgue contributors (see AUTHORS)
+ * Copyright 2009-2026 GrandOrgue contributors (see AUTHORS)
  * License GPL-2.0 or later
  * (https://www.gnu.org/licenses/old-licenses/gpl-2.0.html).
  */
@@ -30,6 +30,7 @@ GODrawstop::GODrawstop(GOOrganModel &organModel, ObjectType objectType)
   : GOButtonControl(organModel, objectType, MIDI_RECV_DRAWSTOP, false),
     m_Type(FUNCTION_INPUT),
     m_GCState(0),
+    m_SavedEngaged(false),
     m_ControlledDrawstops(),
     m_ControllingDrawstops(),
     m_IsToStoreInDivisional(false),
@@ -82,6 +83,7 @@ void GODrawstop::Init(
   GOConfigReader &cfg, const wxString &group, const wxString &name) {
   m_Type = FUNCTION_INPUT;
   m_Engaged = cfg.ReadBoolean(CMBSetting, group, wxT("DefaultToEngaged"));
+  m_SavedEngaged = m_Engaged;
   m_GCState = 0;
   m_IsToStoreInDivisional = true;
   m_IsToStoreInGeneral = true;
@@ -106,6 +108,7 @@ void GODrawstop::Load(GOConfigReader &cfg, const wxString &group) {
     m_Engaged = cfg.ReadBoolean(ODFSetting, group, wxT("DefaultToEngaged"));
     m_Engaged = cfg.ReadBoolean(
       CMBSetting, group, wxT("DefaultToEngaged"), false, m_Engaged);
+    m_SavedEngaged = m_Engaged;
     m_GCState
       = cfg.ReadInteger(ODFSetting, group, wxT("GCState"), -1, 1, false, 0);
   } else {
@@ -153,8 +156,11 @@ void GODrawstop::Load(GOConfigReader &cfg, const wxString &group) {
 }
 
 void GODrawstop::Save(GOConfigWriter &cfg) {
-  if (!IsReadOnly())
-    cfg.WriteBoolean(m_group, wxT("DefaultToEngaged"), IsEngaged());
+  if (!IsReadOnly()) {
+    if (!cfg.IsLiveStateExcluded())
+      m_SavedEngaged = IsEngaged();
+    cfg.WriteBoolean(m_group, wxT("DefaultToEngaged"), m_SavedEngaged);
+  }
   GOButtonControl::Save(cfg);
 }
 

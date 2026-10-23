@@ -176,6 +176,7 @@ void GOVirtualCouplerController::Load(
       CMBSetting, pCoupleThrough->GetGroup(), WX_COUPLE_THROUGH, false, false);
 
     pCoupleThrough->SetButtonState(isCoupleThrough);
+    e.second.m_IsSavedCoupleThrough = isCoupleThrough;
   }
 }
 
@@ -184,10 +185,12 @@ void GOVirtualCouplerController::Save(GOConfigWriter &cfg) {
     GOCallbackButtonControl *pCoupleThrough
       = e.second.m_ButtonCoupleThrough.get();
 
+    if (!cfg.IsLiveStateExcluded())
+      e.second.m_IsSavedCoupleThrough = pCoupleThrough->IsEngaged();
     cfg.WriteBoolean(
       pCoupleThrough->GetGroup(),
       WX_COUPLE_THROUGH,
-      pCoupleThrough->IsEngaged());
+      e.second.m_IsSavedCoupleThrough);
   }
 }
 

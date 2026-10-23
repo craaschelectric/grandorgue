@@ -1,6 +1,6 @@
 /*
  * Copyright 2006 Milan Digital Audio LLC
- * Copyright 2009-2025 GrandOrgue contributors (see AUTHORS)
+ * Copyright 2009-2026 GrandOrgue contributors (see AUTHORS)
  * License GPL-2.0 or later
  * (https://www.gnu.org/licenses/old-licenses/gpl-2.0.html).
  */
@@ -26,7 +26,8 @@ GOEnclosure::GOEnclosure(GOOrganModel &organModel)
     m_Displayed1(false),
     m_Displayed2(false),
     m_AmpMinimumLevel(0),
-    m_MIDIValue(0) {}
+    m_MIDIValue(0),
+    m_SavedMIDIValue(0) {}
 
 static const wxString WX_AMP_MINIMUM_LEVEL = wxT("AmpMinimumLevel");
 static const wxString WX_VALUE = wxT("Value");
@@ -42,6 +43,7 @@ void GOEnclosure::LoadFromCmb(GOConfigReader &cfg, uint8_t defaultValue) {
     m_DefaultAmpMinimumLevel);
   SetEnclosureValue(cfg.ReadInteger(
     CMBSetting, m_group, WX_VALUE, 0, MAX_MIDI_VALUE, false, defaultValue));
+  m_SavedMIDIValue = m_MIDIValue;
 }
 
 void GOEnclosure::Init(
@@ -71,7 +73,9 @@ void GOEnclosure::Load(GOConfigReader &cfg, const wxString &group) {
 void GOEnclosure::Save(GOConfigWriter &cfg) {
   GOMidiReceivingSendingObject::Save(cfg);
   cfg.WriteInteger(m_group, WX_AMP_MINIMUM_LEVEL, m_AmpMinimumLevel);
-  cfg.WriteInteger(m_group, WX_VALUE, m_MIDIValue);
+  if (!cfg.IsLiveStateExcluded())
+    m_SavedMIDIValue = m_MIDIValue;
+  cfg.WriteInteger(m_group, WX_VALUE, m_SavedMIDIValue);
 }
 
 void GOEnclosure::SetEnclosureValue(uint8_t n) {

@@ -1,6 +1,11 @@
 #include "GOTestDrawStop.h"
 
+#include "config/GOConfigFileWriter.h"
+#include "config/GOConfigWriter.h"
 #include "model/GOSwitch.h"
+
+#include "GOBuffer.h"
+#include "GOSaveableObject.h"
 
 #include "GOTestScope.h"
 
@@ -146,4 +151,60 @@ void GOTestDrawStop::TestInternalState::TestEngagedState() {
   GOAssert(
     sw.IsEngaged(),
     "After disengaging from a crescendo and an attempt to disengage manually");
+}
+
+std::string GOTestDrawStop::TestSavedState::TEST_NAME
+  = CLASS_NAME + "::SavedState";
+
+void GOTestDrawStop::TestSavedState::run() {
+  GO_RUN_TEST(TestAutosaveKeepsSavedState())
+}
+
+/**
+ * Saves the switch and returns the written DefaultToEngaged value.
+ */
+static wxString save_engaged_value(GOSwitch &sw, bool isLiveStateExcluded) {
+  GOConfigFileWriter cfgFile;
+  GOConfigWriter cfg(cfgFile, false);
+  GOBuffer<uint8_t> content;
+
+  cfg.SetLiveStateExcluded(isLiveStateExcluded);
+  // Save() is protected in the drawstop, but public as a saveable object
+  static_cast<GOSaveableObject &>(sw).Save(cfg);
+  cfgFile.GetFileContent(content, false);
+
+  const wxString text
+    = wxString::FromUTF8((const char *)content.get(), content.GetSize());
+  const int keyPos = text.Find(wxT("DefaultToEngaged="));
+
+  return keyPos == wxNOT_FOUND ? wxString(wxT("absent"))
+                               : text.Mid(keyPos + 17, 1);
+}
+
+void GOTestDrawStop::TestSavedState::TestAutosaveKeepsSavedState() {
+  GOSwitch sw(*controller);
+
+  sw.SetGroup(wxT("Switch001"));
+  GOAssert(
+    save_engaged_value(sw, true) == wxT("N"),
+    "Autosave of a disengaged switch");
+
+  sw.SetButtonState(true);
+  GOAssert(
+    save_engaged_value(sw, true) == wxT("N"),
+    "Autosave must not store the engaged state");
+  GOAssert(
+    save_engaged_value(sw, false) == wxT("Y"),
+    "An explicit save stores the engaged state");
+  GOAssert(
+    save_engaged_value(sw, true) == wxT("Y"),
+    "Autosave keeps the state of the last explicit save");
+
+  sw.SetButtonState(false);
+  GOAssert(
+    save_engaged_value(sw, true) == wxT("Y"),
+    "Autosave must not store the disengaged state");
+  GOAssert(
+    save_engaged_value(sw, false) == wxT("N"),
+    "An explicit save stores the disengaged state");
 }

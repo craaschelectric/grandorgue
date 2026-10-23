@@ -39,12 +39,16 @@ public:
   /**
    * @param saveFunction writes the settings file. It is used by the voicing
    *   window. Returns true on success
+   * @param holdAutoSaveFunction holds (true) or releases (false) the autosave
+   *   of the settings file. It is used by the voicing window, whose changes
+   *   are written only when the user saves them
    */
   GOOrganSettingsDialog(
     GOOrganModel &organModel,
     GODocumentBase *doc,
     wxWindow *parent,
-    const std::function<bool()> &saveFunction);
+    const std::function<bool()> &saveFunction,
+    const std::function<void(bool)> &holdAutoSaveFunction);
 
 private:
   void ButtonStatesChanged() override;

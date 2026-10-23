@@ -668,10 +668,29 @@ static bool write_config_file(
 }
 
 bool GOOrganController::Save(const wxString &path) {
+  return SaveSettingsFile(path, false);
+}
+
+bool GOOrganController::AutoSave() {
+  return SaveSettingsFile(wxEmptyString, true);
+}
+
+void GOOrganController::ReleaseAutoSave() {
+  if (m_NAutoSaveHolds > 0)
+    m_NAutoSaveHolds--;
+  // the changes made while the autosave was held have not been written yet
+  if (m_NAutoSaveHolds == 0 && m_OrganModified)
+    GOModificationProxy::OnIsModifiedChanged(true);
+}
+
+bool GOOrganController::SaveSettingsFile(
+  const wxString &path, bool isLiveStateExcluded) {
   BeforeSave();
 
   GOConfigFileWriter cfgFile;
   GOConfigWriter cfg(cfgFile, false);
+
+  cfg.SetLiveStateExcluded(isLiveStateExcluded);
   SaveOrganCoreData(cfg);
   OnSave(cfg);
 

@@ -41,6 +41,7 @@ private:
   GOPipeConfigNode &r_RootNode;
 
   std::function<bool()> m_SaveFunction;
+  std::function<void(bool)> m_HoldAutoSaveFunction;
 
   wxTreeCtrl *m_Tree;
   wxButton *m_VoicingButton;
@@ -119,11 +120,14 @@ public:
   /**
    * @param saveFunction writes the settings file. It is used by the voicing
    *   window. Returns true on success
+   * @param holdAutoSaveFunction holds (true) or releases (false) the autosave.
+   *   It is used by the voicing window
    */
   GOOrganSettingsPipesTab(
     GOOrganModel &organModel,
     GOOrganSettingsDialogBase *pDlg,
-    const std::function<bool()> &saveFunction);
+    const std::function<bool()> &saveFunction,
+    const std::function<void(bool)> &holdAutoSaveFunction);
 
   void DistributeAudio() override;
   void ResetToDefault() override;

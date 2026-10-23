@@ -1,6 +1,6 @@
 /*
  * Copyright 2006 Milan Digital Audio LLC
- * Copyright 2009-2025 GrandOrgue contributors (see AUTHORS)
+ * Copyright 2009-2026 GrandOrgue contributors (see AUTHORS)
  * License GPL-2.0 or later
  * (https://www.gnu.org/licenses/old-licenses/gpl-2.0.html).
  */
@@ -17,9 +17,22 @@ class GOConfigWriter {
 private:
   GOConfigFileWriter &m_ConfigFile;
   bool m_Prefix;
+  bool m_IsLiveStateExcluded = false;
 
 public:
   GOConfigWriter(GOConfigFileWriter &cfg, bool prefix);
+
+  /**
+   * Whether the objects that save the current performance state (the engaged
+   * state of stops, couplers, tremulants and switches, and the enclosure
+   * positions) must write their last loaded or explicitly saved value instead
+   * of the live one. It is set by the autosave so that it never stores the
+   * current registration.
+   */
+  bool IsLiveStateExcluded() const { return m_IsLiveStateExcluded; }
+  void SetLiveStateExcluded(bool isExcluded) {
+    m_IsLiveStateExcluded = isExcluded;
+  }
 
   void WriteString(wxString group, wxString key, wxString value);
   void WriteInteger(wxString group, wxString key, int value);

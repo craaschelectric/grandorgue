@@ -93,12 +93,14 @@ END_EVENT_TABLE()
 GOOrganSettingsPipesTab::GOOrganSettingsPipesTab(
   GOOrganModel &organModel,
   GOOrganSettingsDialogBase *pDlg,
-  const std::function<bool()> &saveFunction)
+  const std::function<bool()> &saveFunction,
+  const std::function<void(bool)> &holdAutoSaveFunction)
   : GOOrganSettingsTab(pDlg, WX_TAB_CODE, WX_TAB_TITLE),
     r_OrganModel(organModel),
     r_config(organModel.GetConfig()),
     r_RootNode(organModel.GetRootPipeConfigNode()),
     m_SaveFunction(saveFunction),
+    m_HoldAutoSaveFunction(holdAutoSaveFunction),
     p_LastTreeItemData(nullptr),
     m_LoadChangeCnt(0) {
   wxGridBagSizer *const mainSizer = new wxGridBagSizer(5, 5);
@@ -331,7 +333,11 @@ void GOOrganSettingsPipesTab::OnVoicingClicked(wxCommandEvent &e) {
       wxOK | wxICON_INFORMATION,
       this);
   else
-    (new GOVoicingDialog(wxGetTopLevelParent(this), mpNodes, m_SaveFunction))
+    (new GOVoicingDialog(
+       wxGetTopLevelParent(this),
+       mpNodes,
+       m_SaveFunction,
+       m_HoldAutoSaveFunction))
       ->Show();
 }
 

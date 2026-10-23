@@ -8,6 +8,7 @@
 #ifndef GOAPPWINDOW_H
 #define GOAPPWINDOW_H
 
+#include <atomic>
 #include <memory>
 #include <vector>
 
@@ -58,6 +59,9 @@ private:
   wxMenu *m_panel_menu;
   // what the panel menu was last built from, to skip identical rebuilds
   wxString m_PanelMenuSignature;
+  // Whether an autosave has been queued but has not run yet. Set from any
+  // thread, so that a burst of changes is written once.
+  std::atomic<bool> m_IsAutoSavePending{false};
   wxMenu *m_favorites_menu;
   wxMenu *m_recent_menu;
   wxMenu *m_temperament_menu;
@@ -150,6 +154,16 @@ private:
   void OnSave(wxCommandEvent &event);
   void OnMenuClose(wxCommandEvent &event);
   void OnExit(wxCommandEvent &event);
+  /**
+   * Saves the organ settings, closes GrandOrgue and then powers the computer
+   * off. Triggered by the "Shut down computer" MIDI object.
+   */
+  void OnShutdownComputer(wxCommandEvent &event);
+  /**
+   * Writes the organ settings file if there are unsaved changes, without
+   * saving the stop and key state. Runs on the main thread.
+   */
+  void RunAutoSave();
   void OnImportCombinations(wxCommandEvent &event);
   void OnExportCombinations(wxCommandEvent &event);
   void OnImportSettings(wxCommandEvent &event);

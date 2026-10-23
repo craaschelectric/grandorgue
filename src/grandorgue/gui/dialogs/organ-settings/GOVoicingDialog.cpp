@@ -70,7 +70,8 @@ static double slider_to_offset(int sliderValue, const ParameterLimits &limits) {
 GOVoicingDialog::GOVoicingDialog(
   wxWindow *pParent,
   const std::vector<GOPipeConfigNode *> &mpNodes,
-  const std::function<bool()> &saveFunction)
+  const std::function<bool()> &saveFunction,
+  const std::function<void(bool)> &holdAutoSaveFunction)
   : wxDialog(
     pParent,
     wxID_ANY,
@@ -79,6 +80,7 @@ GOVoicingDialog::GOVoicingDialog(
     wxDefaultSize,
     wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER),
     m_SaveFunction(saveFunction),
+    m_HoldAutoSaveFunction(holdAutoSaveFunction),
     m_Parameter(GOPipeVoicing::GAIN),
     m_IsRefreshing(false),
     p_ParameterChoice(nullptr),
@@ -86,6 +88,8 @@ GOVoicingDialog::GOVoicingDialog(
     p_MasterSpin(nullptr),
     p_ResetButton(nullptr),
     p_SaveButton(nullptr) {
+  if (m_HoldAutoSaveFunction)
+    m_HoldAutoSaveFunction(true);
   m_Voicing.Select(mpNodes);
   if (!mpNodes.empty() && mpNodes.front())
     SetTitle(wxString::Format(_("Voicing - %s"), mpNodes.front()->GetName()));
@@ -331,6 +335,11 @@ void GOVoicingDialog::RefreshQuick(unsigned octaveI) {
     octaveControls.p_LeftQuick->SetValue(leftValue);
   if (octaveControls.p_RightQuick->GetValue() != rightValue)
     octaveControls.p_RightQuick->SetValue(rightValue);
+}
+
+GOVoicingDialog::~GOVoicingDialog() {
+  if (m_HoldAutoSaveFunction)
+    m_HoldAutoSaveFunction(false);
 }
 
 void GOVoicingDialog::RefreshAll() {

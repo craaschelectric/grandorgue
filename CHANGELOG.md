@@ -1,3 +1,4 @@
+- Added automatic saving of organ settings and combinations as they change, without the stop and enclosure state (voicing is saved with its window's Save), and a MIDI-assignable object that saves, exits and shuts down the computer
 - Added a live per-pipe voicing window for gain, tuning and tone balance: changes are heard on held notes while a slider moves, with Reset and Save, and the voicing kept on windchests, ranks and the organ is moved into the pipes at load
 - Fixed MIDI player Play/Stop crashing when triggered by incoming MIDI https://github.com/GrandOrgue/grandorgue/issues/2636
 - Fixed hanging on Panic, on loading another organ, on exit and on removing an audio device in Settings https://github.com/GrandOrgue/grandorgue/issues/2606

@@ -64,6 +64,8 @@ class GOOrganController : public GOEventDistributor,
 
 private:
   GOConfig &m_config;
+  // Used on the main thread only
+  unsigned m_NAutoSaveHolds = 0;
   GOOrgan m_ConfiguredOrgan;
   GOLoadedOrganInfo m_LoadedOrganInfo;
   GOFileStore m_FileStore;
@@ -107,6 +109,15 @@ private:
   GOSoundSystem *p_SoundSystem = nullptr;
   GOLabelControl m_PitchLabel;
   GOLabelControl m_TemperamentLabel;
+
+  /**
+   * Writes the settings file. Shared by Save() and AutoSave().
+   * @param path see Save()
+   * @param isLiveStateExcluded if true then the current states of stops,
+   *   couplers, tremulants, switches and enclosures are not written
+   * @return true if the file was written successfully
+   */
+  bool SaveSettingsFile(const wxString &path, bool isLiveStateExcluded);
 
   // if modified changes m_IsOrganModified then make a side effect
   void SetOrganModified(bool modified);
@@ -222,6 +233,31 @@ public:
    * @return true if the file was written successfully
    */
   bool Save(const wxString &path = wxEmptyString);
+  /**
+   * Writes the organ settings file like Save() but keeps the stop, coupler,
+   * tremulant, switch and enclosure states at the values that were loaded or
+   * last explicitly saved. It is used by the autosave, which must not store
+   * the current registration. Everything else (voicing, MIDI assignments,
+   * combinations, settings) is written as it is now. Resets the modified flag.
+   * @return true if the file was written successfully
+   */
+  bool AutoSave();
+  /**
+   * Stops the autosave from being started until ReleaseAutoSave() is called
+   * the same number of times. It is used while changes that the user has not
+   * confirmed yet are in the organ (the voicing window). AutoSave() itself
+   * and Save() still write the file when called directly.
+   */
+  void HoldAutoSave() { m_NAutoSaveHolds++; }
+  /**
+   * Cancels one HoldAutoSave(). If the organ is modified and the autosave is
+   * not held any more, the autosave is requested again.
+   */
+  void ReleaseAutoSave();
+  /**
+   * @return true if the autosave is held by HoldAutoSave()
+   */
+  bool IsAutoSaveHeld() const { return m_NAutoSaveHolds > 0; }
   bool CachePresent() const {
     return wxFileExists(m_LoadedOrganInfo.cacheFilePath);
   }
