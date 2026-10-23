@@ -36,12 +36,11 @@ private:
   // The DefaultToEngaged defined in the ODF
   bool m_OdfEngaged;
   /**
-   * The state that the stop takes when the organ loads. It overrides the ODF
-   * DefaultToEngaged and is written to the settings file when it differs from
-   * it. If it engages a stop that the ODF does not, then the General Cancel
-   * also engages the stop. The current state of the stop is never saved.
+   * Whether the user has inverted the ODF DefaultToEngaged. Only this is
+   * written to the settings file: the current state of the stop is never
+   * saved.
    */
-  bool m_SavedEngaged;
+  bool m_IsDefaultInverted;
   std::unordered_map<wxString, bool, wxStringHash, wxStringEqual>
     m_InternalStates;
   std::vector<GODrawstop *> m_ControlledDrawstops;
@@ -104,15 +103,15 @@ public:
   void Reset();
 
   /**
-   * @return true if the stop is engaged when the organ loads
+   * @return true if the stop is engaged when the organ loads: the ODF
+   *   DefaultToEngaged, inverted if the user has inverted it
    */
-  bool IsDefaultEngaged() const { return m_SavedEngaged; }
+  bool IsDefaultEngaged() const { return m_OdfEngaged != m_IsDefaultInverted; }
   /**
-   * Sets the default state of the stop. It overrides the ODF
-   * DefaultToEngaged, is saved in the settings file, and moves the stop now.
-   * If it engages a stop that the ODF does not, then the General Cancel also
-   * engages the stop, otherwise the General Cancel behaves as the ODF defines
-   * it.
+   * Sets the default state of the stop. The settings file keeps whether it
+   * differs from the ODF DefaultToEngaged. The stop moves now. If the default
+   * engages a stop that the ODF does not, then the General Cancel also engages
+   * the stop, otherwise the General Cancel behaves as the ODF defines it.
    * @param isEngaged the new default state
    */
   void SetDefaultEngaged(bool isEngaged);

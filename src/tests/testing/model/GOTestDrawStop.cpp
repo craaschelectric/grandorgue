@@ -187,13 +187,16 @@ void GOTestDrawStop::TestSavedState::TestSaveNeverStoresLiveState() {
 
   sw.SetGroup(wxT("Switch001"));
   GOAssert(
-    save_value(sw, wxT("DefaultToEngaged")) == wxT("absent"),
+    save_value(sw, wxT("InvertDefaultToEngaged")) == wxT("absent"),
     "A switch with the ODF default saves no default");
 
   sw.SetButtonState(true);
   GOAssert(
-    save_value(sw, wxT("DefaultToEngaged")) == wxT("absent"),
+    save_value(sw, wxT("InvertDefaultToEngaged")) == wxT("absent"),
     "The engaged state of the switch must not be saved");
+  GOAssert(
+    save_value(sw, wxT("DefaultToEngaged")) == wxT("absent"),
+    "The ODF key is never written");
   GOAssert(!sw.IsDefaultEngaged(), "Engaging does not change the default");
 }
 
@@ -204,7 +207,7 @@ void GOTestDrawStop::TestSavedState::TestDefaultEngaged() {
   sw.SetDefaultEngaged(true);
   GOAssert(sw.IsEngaged(), "Setting the default engaged moves the switch");
   GOAssert(
-    save_value(sw, wxT("DefaultToEngaged")) == wxT("Y"),
+    save_value(sw, wxT("InvertDefaultToEngaged")) == wxT("Y"),
     "The default engaged state is saved");
 
   sw.SetButtonState(false);
@@ -215,8 +218,8 @@ void GOTestDrawStop::TestSavedState::TestDefaultEngaged() {
   sw.SetDefaultEngaged(false);
   GOAssert(!sw.IsEngaged(), "Clearing the default moves the switch");
   GOAssert(
-    save_value(sw, wxT("DefaultToEngaged")) == wxT("absent"),
-    "A default equal to the ODF one is not saved");
+    save_value(sw, wxT("InvertDefaultToEngaged")) == wxT("absent"),
+    "A default equal to the ODF one is not inverted");
 
   sw.SetButtonState(true);
   sw.Reset();

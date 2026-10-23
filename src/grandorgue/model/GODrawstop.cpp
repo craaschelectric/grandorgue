@@ -26,12 +26,16 @@ static const GOConfigEnum FUNCTION_TYPES({
   {wxT("Xor"), GODrawstop::FUNCTION_XOR},
 });
 
+// The settings file key that tells that the user has inverted the
+// DefaultToEngaged of the ODF
+static const wxString WX_INVERT_DEFAULT = wxT("InvertDefaultToEngaged");
+
 GODrawstop::GODrawstop(GOOrganModel &organModel, ObjectType objectType)
   : GOButtonControl(organModel, objectType, MIDI_RECV_DRAWSTOP, false),
     m_Type(FUNCTION_INPUT),
     m_GCState(0),
     m_OdfEngaged(false),
-    m_SavedEngaged(false),
+    m_IsDefaultInverted(false),
     m_ControlledDrawstops(),
     m_ControllingDrawstops(),
     m_IsToStoreInDivisional(false),
@@ -83,8 +87,10 @@ void GODrawstop::SetFunctionType(GOFunctionType newFunctionType) {
 void GODrawstop::Init(
   GOConfigReader &cfg, const wxString &group, const wxString &name) {
   m_Type = FUNCTION_INPUT;
-  m_Engaged = cfg.ReadBoolean(CMBSetting, group, wxT("DefaultToEngaged"));
-  m_SavedEngaged = m_Engaged;
+  m_OdfEngaged = false;
+  m_IsDefaultInverted
+    = cfg.ReadBoolean(CMBSetting, group, WX_INVERT_DEFAULT, false, false);
+  m_Engaged = IsDefaultEngaged();
   m_GCState = 0;
   m_IsToStoreInDivisional = true;
   m_IsToStoreInGeneral = true;
@@ -107,10 +113,10 @@ void GODrawstop::Load(GOConfigReader &cfg, const wxString &group) {
 
   if (m_Type == FUNCTION_INPUT) {
     m_OdfEngaged = cfg.ReadBoolean(ODFSetting, group, wxT("DefaultToEngaged"));
-    // the settings file overrides the ODF
-    m_Engaged = cfg.ReadBoolean(
-      CMBSetting, group, wxT("DefaultToEngaged"), false, m_OdfEngaged);
-    m_SavedEngaged = m_Engaged;
+    // the settings file may invert the ODF value
+    m_IsDefaultInverted
+      = cfg.ReadBoolean(CMBSetting, group, WX_INVERT_DEFAULT, false, false);
+    m_Engaged = IsDefaultEngaged();
     m_GCState
       = cfg.ReadInteger(ODFSetting, group, wxT("GCState"), -1, 1, false, 0);
   } else {
@@ -159,13 +165,13 @@ void GODrawstop::Load(GOConfigReader &cfg, const wxString &group) {
 
 void GODrawstop::Save(GOConfigWriter &cfg) {
   // The current state of the stop is never saved: only the default one
-  if (!IsReadOnly() && m_SavedEngaged != m_OdfEngaged)
-    cfg.WriteBoolean(m_group, wxT("DefaultToEngaged"), m_SavedEngaged);
+  if (!IsReadOnly() && m_IsDefaultInverted)
+    cfg.WriteBoolean(m_group, WX_INVERT_DEFAULT, true);
   GOButtonControl::Save(cfg);
 }
 
 void GODrawstop::SetDefaultEngaged(bool isEngaged) {
-  m_SavedEngaged = isEngaged;
+  m_IsDefaultInverted = isEngaged != m_OdfEngaged;
   SetButtonState(isEngaged);
 }
 
@@ -181,7 +187,7 @@ void GODrawstop::SetResultState(bool resState) {
 
 void GODrawstop::Reset() {
   // a default that engages a stop engages it on General Cancel too
-  const int gcState = m_SavedEngaged && !m_OdfEngaged ? 1 : m_GCState;
+  const int gcState = IsDefaultEngaged() && !m_OdfEngaged ? 1 : m_GCState;
 
   if (!IsReadOnly() && gcState >= 0) {
     if (gcState == 0) {
