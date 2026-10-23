@@ -1,0 +1,21 @@
+/*
+ * Copyright 2026 GrandOrgue contributors (see AUTHORS)
+ * License GPL-2.0 or later
+ * (https://www.gnu.org/licenses/old-licenses/gpl-2.0.html).
+ */
+
+#ifndef GO_SOURCE_OFFER_H
+#define GO_SOURCE_OFFER_H
+
+/* Where the source code of this build is offered (GPL section 3). It is a
+ * separate header from go_defs.h so that a new commit rebuilds only what shows
+ * the offer. */
+
+/* The URL where the source code of this build is published */
+#define GO_SOURCE_URL "@GO_SOURCE_URL@"
+/* The address where a copy of the source code can be requested */
+#define GO_SOURCE_CONTACT "@GO_SOURCE_CONTACT@"
+/* The git commit that this build was made from, or "unknown" */
+#define GO_SOURCE_COMMIT "@GO_SOURCE_COMMIT@"
+
+#endif

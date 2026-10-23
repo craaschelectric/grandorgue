@@ -4,6 +4,7 @@
 
 include(UsewxWidgets)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/go_defs.h.in ${CMAKE_CURRENT_BINARY_DIR}/go_defs.h/go_defs.h)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/go_source_offer.h.in ${CMAKE_CURRENT_BINARY_DIR}/go_defs.h/go_source_offer.h)
 include_directories(${WAVPACK_INCLUDE_DIRS})
 include_directories(${ZLIB_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/go_defs.h)

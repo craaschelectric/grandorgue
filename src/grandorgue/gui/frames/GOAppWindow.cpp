@@ -55,6 +55,7 @@
 #include "go_ids.h"
 #include "go_limits.h"
 #include "go_path.h"
+#include "go_source_offer.h"
 
 struct ShortcutEntry {
   int mod, key, id;
@@ -110,6 +111,7 @@ EVT_MENU(ID_SETTINGS, GOAppWindow::OnSettings)
 EVT_MENU(ID_MIDI_LOAD, GOAppWindow::OnMidiLoad)
 EVT_MENU(wxID_HELP, GOAppWindow::OnHelp)
 EVT_MENU(wxID_ABOUT, GOAppWindow::OnHelpAbout)
+EVT_MENU(ID_HELP_SOURCE, GOAppWindow::OnHelpSource)
 EVT_COMMAND(0, wxEVT_WINTITLE, GOAppWindow::OnSetTitle)
 EVT_MENU(ID_VOLUME, GOAppWindow::OnSettingsVolume)
 EVT_MENU(ID_POLYPHONY, GOAppWindow::OnSettingsPolyphony)
@@ -282,6 +284,11 @@ GOAppWindow::GOAppWindow(
   wxMenu *help_menu = new wxMenu;
   help_menu->Append(wxID_HELP, _("&Help\tF1"), wxEmptyString, wxITEM_NORMAL);
   help_menu->Append(wxID_ABOUT, _("&About"), wxEmptyString, wxITEM_NORMAL);
+  help_menu->Append(
+    ID_HELP_SOURCE,
+    _("&Source code and license"),
+    wxEmptyString,
+    wxITEM_NORMAL);
   help_menu->Append(
     ID_CHECK_FOR_UPDATES,
     _("&Check for updates"),
@@ -1386,6 +1393,30 @@ void GOAppWindow::OnSettingsReleaseLength(wxCommandEvent &event) {
 }
 
 void GOAppWindow::OnHelpAbout(wxCommandEvent &event) { DoSplash(false); }
+
+void GOAppWindow::OnHelpSource(wxCommandEvent &event) {
+  // The same text is in SOURCE-OFFER.txt at the root of the source tree
+  wxMessageBox(
+    wxString::Format(
+      _("GrandOrgue %s, modified by Craasch Electric.\n"
+        "Licensed under the GNU General Public License, version 2 or later. "
+        "This program comes with no warranty.\n\n"
+        "The complete source code of this build is at:\n%s\n"
+        "Commit: %s\n\n"
+        "For at least three years from the day you received this program, "
+        "a copy of the complete source code is also available on request "
+        "from %s, for no more than the cost of copying.\n\n"
+        "The license text is at "
+        "https://www.gnu.org/licenses/old-licenses/gpl-2.0.html and in the "
+        "file LICENSE of the source code."),
+      wxT(APP_VERSION),
+      wxT(GO_SOURCE_URL),
+      wxT(GO_SOURCE_COMMIT),
+      wxT(GO_SOURCE_CONTACT)),
+    _("Source code and license"),
+    wxOK | wxICON_INFORMATION,
+    this);
+}
 
 void GOAppWindow::DoSplash(bool timeout) { GOSplash::DoSplash(timeout, this); }
 

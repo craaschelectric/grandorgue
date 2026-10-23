@@ -96,6 +96,23 @@ endif()
 
 set(FULL_VERSION "${PROJECT_VERSION}-${BUILD_VERSION}")
 
+# Where the source of this build is offered to the people who receive it
+# (GPL section 3). The commit identifies the exact source of the binary.
+set(GO_SOURCE_URL "https://github.com/craaschelectric/grandorgue" CACHE STRING
+  "The URL where the source code of this build is published")
+set(GO_SOURCE_CONTACT "craaschelectric@gmail.com" CACHE STRING
+  "The address where a copy of the source code can be requested")
+execute_process(
+  COMMAND git rev-parse --short=12 HEAD
+  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+  OUTPUT_VARIABLE GO_SOURCE_COMMIT
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  RESULT_VARIABLE GO_SOURCE_COMMIT_RESULT
+  ERROR_QUIET)
+if (NOT GO_SOURCE_COMMIT_RESULT EQUAL 0 OR NOT GO_SOURCE_COMMIT)
+  set(GO_SOURCE_COMMIT "unknown")
+endif()
+
 # Set GITHUB_PROJECT variable that is used to configure update checking
 if (NOT DEFINED GITHUB_PROJECT)
   set(GITHUB_PROJECT "GrandOrgue/grandorgue")

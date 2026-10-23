@@ -1,3 +1,4 @@
+- Added a Help > Source code and license window and a SOURCE-OFFER.txt file with the GPL notice of this fork, naming the source URL, the commit of the build and the address for requesting the source
 - Added a Startup tab to the MIDI dialog of stops, couplers, tremulants and switches with an Engaged on load and on General Cancel checkbox and a link to the stop's voicing; saving no longer stores the current positions of the stops
 - Added automatic saving of organ settings and combinations as they change, without the stop and enclosure state (voicing is saved with its window's Save), and a MIDI-assignable object that saves, exits and shuts down the computer
 - Added a live per-pipe voicing window for gain, tuning and tone balance: changes are heard on held notes while a slider moves, with Reset and Save, and the voicing kept on windchests, ranks and the organ is moved into the pipes at load

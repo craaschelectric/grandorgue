@@ -1,0 +1,31 @@
+GrandOrgue, modified by Craasch Electric
+========================================
+
+This product includes GrandOrgue, modified by Craasch Electric. It is
+licensed under the GNU General Public License, version 2 or later
+(https://www.gnu.org/licenses/old-licenses/gpl-2.0.html). It comes with
+no warranty.
+
+Source code
+-----------
+
+The complete source code of this product, including the scripts that
+build it, is published at:
+
+  https://github.com/craaschelectric/grandorgue
+
+The version of the source that matches this product is shown in the
+program under Help > Source code and license (the "Commit" line).
+
+Written offer
+-------------
+
+For at least three years from the day you received this product, we will
+send you a copy of the complete corresponding source code, on a medium
+customarily used for software interchange, for no more than the cost of
+physically copying and sending it. Write to:
+
+  Craasch Electric
+  craaschelectric@gmail.com
+
+The license text is in the file LICENSE of the source code.

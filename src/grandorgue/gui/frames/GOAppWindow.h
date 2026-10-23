@@ -193,6 +193,11 @@ private:
   void OnTemperament(wxCommandEvent &event);
   void OnHelp(wxCommandEvent &event);
   void OnHelpAbout(wxCommandEvent &event);
+  /**
+   * Shows the GPL notice with the place where the source code of this build
+   * is available.
+   */
+  void OnHelpSource(wxCommandEvent &event);
 
   void OnSettingsVolume(wxCommandEvent &event);
   void OnSettingsPolyphony(wxCommandEvent &event);
