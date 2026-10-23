@@ -30,10 +30,16 @@ public:
 
 private:
   GOFunctionType m_Type;
+  // What the General Cancel does as defined in the ODF:
+  // -1 nothing, 0 disengages, 1 engages
   int m_GCState;
+  // The DefaultToEngaged defined in the ODF
+  bool m_OdfEngaged;
   /**
-   * The engaged state that was loaded from the settings file or was last
-   * explicitly saved. The autosave writes it instead of the live state.
+   * The state that the stop takes when the organ loads. It overrides the ODF
+   * DefaultToEngaged and is written to the settings file when it differs from
+   * it. If it engages a stop that the ODF does not, then the General Cancel
+   * also engages the stop. The current state of the stop is never saved.
    */
   bool m_SavedEngaged;
   std::unordered_map<wxString, bool, wxStringHash, wxStringEqual>
@@ -96,6 +102,20 @@ public:
   virtual void SetButtonState(bool on) override;
   virtual void Update();
   void Reset();
+
+  /**
+   * @return true if the stop is engaged when the organ loads
+   */
+  bool IsDefaultEngaged() const { return m_SavedEngaged; }
+  /**
+   * Sets the default state of the stop. It overrides the ODF
+   * DefaultToEngaged, is saved in the settings file, and moves the stop now.
+   * If it engages a stop that the ODF does not, then the General Cancel also
+   * engages the stop, otherwise the General Cancel behaves as the ODF defines
+   * it.
+   * @param isEngaged the new default state
+   */
+  void SetDefaultEngaged(bool isEngaged);
   void SetCombinationState(bool on, const wxString &stateName) override;
 };
 

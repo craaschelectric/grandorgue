@@ -41,10 +41,15 @@ private:
     static std::string TEST_NAME;
 
     /*
-     * An explicit save writes the live state of a switch, an autosave keeps
-     * the state that was last saved.
+     * No save writes the current state of a switch.
      */
-    void TestAutosaveKeepsSavedState();
+    void TestSaveNeverStoresLiveState();
+
+    /*
+     * The default engaged state moves the switch, is saved and is applied by
+     * General Cancel.
+     */
+    void TestDefaultEngaged();
 
   public:
     virtual void run() override;

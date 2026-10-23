@@ -234,11 +234,13 @@ public:
    */
   bool Save(const wxString &path = wxEmptyString);
   /**
-   * Writes the organ settings file like Save() but keeps the stop, coupler,
-   * tremulant, switch and enclosure states at the values that were loaded or
-   * last explicitly saved. It is used by the autosave, which must not store
+   * Writes the organ settings file like Save() but also keeps the enclosure
+   * positions and the virtual coupler throughs at the values that were loaded
+   * or last explicitly saved. It is used by the autosave, which must not store
    * the current registration. Everything else (voicing, MIDI assignments,
    * combinations, settings) is written as it is now. Resets the modified flag.
+   * Neither Save() nor AutoSave() writes the current state of the stops: their
+   * defaults are set by GODrawstop::SetDefaultEngaged().
    * @return true if the file was written successfully
    */
   bool AutoSave();

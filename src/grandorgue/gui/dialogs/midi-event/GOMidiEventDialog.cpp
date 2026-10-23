@@ -18,6 +18,7 @@
 #include "GOMidiEventKeyTab.h"
 #include "GOMidiEventRecvTab.h"
 #include "GOMidiEventSendTab.h"
+#include "GOMidiEventStartupTab.h"
 
 enum {
   ID_BUTTON_TO_INITIAL = 400,
@@ -49,7 +50,8 @@ GOMidiEventDialog::GOMidiEventDialog(
     m_recvPage(NULL),
     m_sendPage(NULL),
     m_sendDivisionPage(NULL),
-    m_keyPage(NULL) {
+    m_keyPage(NULL),
+    m_startupPage(NULL) {
   wxBookCtrlBase *notebook = GetBookCtrl();
 
   if (event) {
@@ -130,6 +132,15 @@ GOMidiEventDialog::GOMidiEventDialog(
     nullptr,
     nullptr,
     nullptr) {}
+
+void GOMidiEventDialog::AddStartupTab(
+  GODrawstop &drawstop, const std::function<void()> &showVoicingFunction) {
+  m_startupPage
+    = new GOMidiEventStartupTab(GetBookCtrl(), drawstop, showVoicingFunction);
+  m_startupPage->SetModificationListener(this);
+  AddTab(m_startupPage, "Startup", _("Startup"));
+  LayoutDialog();
+}
 
 void GOMidiEventDialog::RegisterMIDIListener(GOMidiSystem *midi) {
   if (m_recvPage)

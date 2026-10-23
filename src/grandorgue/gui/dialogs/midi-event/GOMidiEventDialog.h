@@ -8,6 +8,8 @@
 #ifndef GOMIDIEVENTDIALOG_H
 #define GOMIDIEVENTDIALOG_H
 
+#include <functional>
+
 #include "gui/dialogs/common/GOTabbedDialog.h"
 #include "gui/document-base/GODocumentView.h"
 #include "modification/GOModificationProxy.h"
@@ -15,11 +17,13 @@
 class wxButton;
 
 class GOConfig;
+class GODrawstop;
 class GOMidiSystem;
 class GOMidiDialogListener;
 class GOMidiEventKeyTab;
 class GOMidiEventRecvTab;
 class GOMidiEventSendTab;
+class GOMidiEventStartupTab;
 class GOMidiListener;
 class GOMidiObject;
 class GOMidiReceiver;
@@ -38,6 +42,7 @@ private:
   GOMidiEventSendTab *m_sendPage;
   GOMidiEventSendTab *m_sendDivisionPage;
   GOMidiEventKeyTab *m_keyPage;
+  GOMidiEventStartupTab *m_startupPage;
 
   wxButton *m_ToInitial;
 
@@ -84,6 +89,15 @@ public:
     GOMidiReceiver *pReceiver);
 
   void RegisterMIDIListener(GOMidiSystem *midi);
+
+  /**
+   * Adds the Startup tab for a stop, coupler, tremulant or switch.
+   * @param drawstop the object of this dialog. It must not be read-only
+   * @param showVoicingFunction opens the voicing window of the stop. If it is
+   *   empty then the tab has no voicing button
+   */
+  void AddStartupTab(
+    GODrawstop &drawstop, const std::function<void()> &showVoicingFunction);
 
 private:
   void OnButtonToInitial(wxCommandEvent &e);

@@ -1,6 +1,6 @@
 /*
  * Copyright 2006 Milan Digital Audio LLC
- * Copyright 2009-2025 GrandOrgue contributors (see AUTHORS)
+ * Copyright 2009-2026 GrandOrgue contributors (see AUTHORS)
  * License GPL-2.0 or later
  * (https://www.gnu.org/licenses/old-licenses/gpl-2.0.html).
  */
@@ -46,6 +46,7 @@ public:
     unsigned first_midi_note_number,
     GOMidiObjectContext *pContext);
   GORank *GetRank(unsigned index);
+  unsigned GetRankCount() const { return m_RankInfo.size(); }
   void Load(GOConfigReader &cfg, const wxString &group) override;
 
   /**

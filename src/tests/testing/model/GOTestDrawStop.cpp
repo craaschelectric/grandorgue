@@ -157,54 +157,68 @@ std::string GOTestDrawStop::TestSavedState::TEST_NAME
   = CLASS_NAME + "::SavedState";
 
 void GOTestDrawStop::TestSavedState::run() {
-  GO_RUN_TEST(TestAutosaveKeepsSavedState())
+  GO_RUN_TEST(TestSaveNeverStoresLiveState())
+  GO_RUN_TEST(TestDefaultEngaged())
 }
 
 /**
- * Saves the switch and returns the written DefaultToEngaged value.
+ * Saves the switch and returns the written value of the key or "absent".
  */
-static wxString save_engaged_value(GOSwitch &sw, bool isLiveStateExcluded) {
+static wxString save_value(GOSwitch &sw, const wxString &key) {
   GOConfigFileWriter cfgFile;
   GOConfigWriter cfg(cfgFile, false);
   GOBuffer<uint8_t> content;
 
-  cfg.SetLiveStateExcluded(isLiveStateExcluded);
   // Save() is protected in the drawstop, but public as a saveable object
   static_cast<GOSaveableObject &>(sw).Save(cfg);
   cfgFile.GetFileContent(content, false);
 
   const wxString text
     = wxString::FromUTF8((const char *)content.get(), content.GetSize());
-  const int keyPos = text.Find(wxT("DefaultToEngaged="));
+  const wxString keyEq = key + wxT("=");
+  const int keyPos = text.Find(keyEq);
 
   return keyPos == wxNOT_FOUND ? wxString(wxT("absent"))
-                               : text.Mid(keyPos + 17, 1);
+                               : text.Mid(keyPos + keyEq.length(), 1);
 }
 
-void GOTestDrawStop::TestSavedState::TestAutosaveKeepsSavedState() {
+void GOTestDrawStop::TestSavedState::TestSaveNeverStoresLiveState() {
   GOSwitch sw(*controller);
 
   sw.SetGroup(wxT("Switch001"));
   GOAssert(
-    save_engaged_value(sw, true) == wxT("N"),
-    "Autosave of a disengaged switch");
+    save_value(sw, wxT("DefaultToEngaged")) == wxT("absent"),
+    "A switch with the ODF default saves no default");
 
   sw.SetButtonState(true);
   GOAssert(
-    save_engaged_value(sw, true) == wxT("N"),
-    "Autosave must not store the engaged state");
+    save_value(sw, wxT("DefaultToEngaged")) == wxT("absent"),
+    "The engaged state of the switch must not be saved");
+  GOAssert(!sw.IsDefaultEngaged(), "Engaging does not change the default");
+}
+
+void GOTestDrawStop::TestSavedState::TestDefaultEngaged() {
+  GOSwitch sw(*controller);
+
+  sw.SetGroup(wxT("Switch001"));
+  sw.SetDefaultEngaged(true);
+  GOAssert(sw.IsEngaged(), "Setting the default engaged moves the switch");
   GOAssert(
-    save_engaged_value(sw, false) == wxT("Y"),
-    "An explicit save stores the engaged state");
-  GOAssert(
-    save_engaged_value(sw, true) == wxT("Y"),
-    "Autosave keeps the state of the last explicit save");
+    save_value(sw, wxT("DefaultToEngaged")) == wxT("Y"),
+    "The default engaged state is saved");
 
   sw.SetButtonState(false);
+  GOAssert(!sw.IsEngaged(), "Disengaging manually");
+  sw.Reset();
+  GOAssert(sw.IsEngaged(), "General Cancel engages a default engaged switch");
+
+  sw.SetDefaultEngaged(false);
+  GOAssert(!sw.IsEngaged(), "Clearing the default moves the switch");
   GOAssert(
-    save_engaged_value(sw, true) == wxT("Y"),
-    "Autosave must not store the disengaged state");
-  GOAssert(
-    save_engaged_value(sw, false) == wxT("N"),
-    "An explicit save stores the disengaged state");
+    save_value(sw, wxT("DefaultToEngaged")) == wxT("absent"),
+    "A default equal to the ODF one is not saved");
+
+  sw.SetButtonState(true);
+  sw.Reset();
+  GOAssert(!sw.IsEngaged(), "General Cancel disengages a normal switch");
 }

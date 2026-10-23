@@ -23,11 +23,10 @@ public:
   GOConfigWriter(GOConfigFileWriter &cfg, bool prefix);
 
   /**
-   * Whether the objects that save the current performance state (the engaged
-   * state of stops, couplers, tremulants and switches, and the enclosure
-   * positions) must write their last loaded or explicitly saved value instead
-   * of the live one. It is set by the autosave so that it never stores the
-   * current registration.
+   * Whether the objects that save a live performance state (the enclosure
+   * positions and the virtual coupler throughs) must write their last loaded
+   * or explicitly saved value instead of the live one. It is set by the
+   * autosave. The stops never save their current state at all.
    */
   bool IsLiveStateExcluded() const { return m_IsLiveStateExcluded; }
   void SetLiveStateExcluded(bool isExcluded) {

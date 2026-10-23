@@ -30,6 +30,7 @@ GODrawstop::GODrawstop(GOOrganModel &organModel, ObjectType objectType)
   : GOButtonControl(organModel, objectType, MIDI_RECV_DRAWSTOP, false),
     m_Type(FUNCTION_INPUT),
     m_GCState(0),
+    m_OdfEngaged(false),
     m_SavedEngaged(false),
     m_ControlledDrawstops(),
     m_ControllingDrawstops(),
@@ -105,9 +106,10 @@ void GODrawstop::Load(GOConfigReader &cfg, const wxString &group) {
     ODFSetting, group, wxT("Function"), FUNCTION_TYPES, false, FUNCTION_INPUT);
 
   if (m_Type == FUNCTION_INPUT) {
-    m_Engaged = cfg.ReadBoolean(ODFSetting, group, wxT("DefaultToEngaged"));
+    m_OdfEngaged = cfg.ReadBoolean(ODFSetting, group, wxT("DefaultToEngaged"));
+    // the settings file overrides the ODF
     m_Engaged = cfg.ReadBoolean(
-      CMBSetting, group, wxT("DefaultToEngaged"), false, m_Engaged);
+      CMBSetting, group, wxT("DefaultToEngaged"), false, m_OdfEngaged);
     m_SavedEngaged = m_Engaged;
     m_GCState
       = cfg.ReadInteger(ODFSetting, group, wxT("GCState"), -1, 1, false, 0);
@@ -156,12 +158,15 @@ void GODrawstop::Load(GOConfigReader &cfg, const wxString &group) {
 }
 
 void GODrawstop::Save(GOConfigWriter &cfg) {
-  if (!IsReadOnly()) {
-    if (!cfg.IsLiveStateExcluded())
-      m_SavedEngaged = IsEngaged();
+  // The current state of the stop is never saved: only the default one
+  if (!IsReadOnly() && m_SavedEngaged != m_OdfEngaged)
     cfg.WriteBoolean(m_group, wxT("DefaultToEngaged"), m_SavedEngaged);
-  }
   GOButtonControl::Save(cfg);
+}
+
+void GODrawstop::SetDefaultEngaged(bool isEngaged) {
+  m_SavedEngaged = isEngaged;
+  SetButtonState(isEngaged);
 }
 
 void GODrawstop::SetResultState(bool resState) {
@@ -175,8 +180,11 @@ void GODrawstop::SetResultState(bool resState) {
 }
 
 void GODrawstop::Reset() {
-  if (!IsReadOnly() && m_GCState >= 0) {
-    if (m_GCState == 0) {
+  // a default that engages a stop engages it on General Cancel too
+  const int gcState = m_SavedEngaged && !m_OdfEngaged ? 1 : m_GCState;
+
+  if (!IsReadOnly() && gcState >= 0) {
+    if (gcState == 0) {
       // Clear all internal states
       for (auto &intState : m_InternalStates)
         intState.second = false;

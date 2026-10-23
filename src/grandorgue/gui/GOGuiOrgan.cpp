@@ -15,6 +15,7 @@
 #include "gui/dialogs/GOMidiObjectstDialog.h"
 #include "gui/dialogs/midi-event/GOMidiEventDialog.h"
 #include "gui/dialogs/organ-settings/GOOrganSettingsDialog.h"
+#include "gui/dialogs/organ-settings/GOVoicingDialog.h"
 #include "gui/frames/GOMainWindowData.h"
 #include "gui/frames/GOStopsWindow.h"
 #include "gui/panels/GOGUIBankedGeneralsPanel.h"
@@ -32,6 +33,9 @@
 #include "loader/GOProgressMonitor.h"
 #include "midi/GOMidiSystem.h"
 #include "midi/events/GOMidiEvent.h"
+#include "model/GODrawstop.h"
+#include "model/GORank.h"
+#include "model/GOStop.h"
 #include "threading/GOMutexLocker.h"
 
 #include "GOEvent.h"
@@ -241,16 +245,32 @@ void GOGuiOrgan::ShowOrganSettingsDialog() {
         *mp_controller,
         this,
         nullptr,
-        [this]() { return mp_controller && mp_controller->AutoSave(); },
-        [this](bool isHeld) {
-          if (mp_controller) {
-            if (isHeld)
-              mp_controller->HoldAutoSave();
-            else
-              mp_controller->ReleaseAutoSave();
-          }
-        }));
+        [this]() { return AutoSaveOrgan(); },
+        [this](bool isHeld) { HoldAutoSave(isHeld); }));
   }
+}
+
+bool GOGuiOrgan::AutoSaveOrgan() {
+  return mp_controller && mp_controller->AutoSave();
+}
+
+void GOGuiOrgan::HoldAutoSave(bool isHeld) {
+  if (mp_controller) {
+    if (isHeld)
+      mp_controller->HoldAutoSave();
+    else
+      mp_controller->ReleaseAutoSave();
+  }
+}
+
+void GOGuiOrgan::ShowVoicingDialog(
+  const std::vector<GOPipeConfigNode *> &mpNodes) {
+  (new GOVoicingDialog(
+     wxTheApp->GetTopWindow(),
+     mpNodes,
+     [this]() { return AutoSaveOrgan(); },
+     [this](bool isHeld) { HoldAutoSave(isHeld); }))
+    ->Show();
 }
 
 void GOGuiOrgan::ShowMidiList() {
@@ -291,6 +311,24 @@ void GOGuiOrgan::ShowMIDIEventDialog(
       obj,
       true,
       pDialogListener);
+    GODrawstop *const pDrawstop = dynamic_cast<GODrawstop *>(&obj);
+
+    if (pDrawstop && !pDrawstop->IsReadOnly()) {
+      GOStop *const pStop = dynamic_cast<GOStop *>(pDrawstop);
+      std::function<void()> showVoicingFunction;
+
+      if (pStop)
+        showVoicingFunction = [this, pStop]() {
+          std::vector<GOPipeConfigNode *> mpNodes;
+
+          for (unsigned nRanks = pStop->GetRankCount(), rankI = 0;
+               rankI < nRanks;
+               rankI++)
+            mpNodes.push_back(&pStop->GetRank(rankI)->GetPipeConfig());
+          ShowVoicingDialog(mpNodes);
+        };
+      dlg->AddStartupTab(*pDrawstop, showVoicingFunction);
+    }
     dlg->RegisterMIDIListener(mp_controller->GetMidi());
     dlg->SetModificationListener(&*mp_controller);
     registerWindow(GOGuiOrgan::MIDI_EVENT, &obj, dlg);

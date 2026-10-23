@@ -9,6 +9,7 @@
 #define GOGUIORGAN_H
 
 #include <optional>
+#include <vector>
 
 #include <wx/string.h>
 
@@ -31,6 +32,7 @@ class GOGUIPanelCreator;
 class GOMidiDialogListener;
 class GOMidiObject;
 class GOMidiSystem;
+class GOPipeConfigNode;
 class GOOrgan;
 class GOProgressMonitor;
 class GOResizable;
@@ -166,6 +168,17 @@ private:
    */
   void OnMidiEvent(const GOMidiEvent &event) override;
 
+  /**
+   * Writes the organ settings file without the live registration.
+   * @return true if the organ is loaded and the file was written
+   */
+  bool AutoSaveOrgan();
+  /**
+   * Holds or releases the autosave while a voicing window is open
+   * @param isHeld true to hold, false to release
+   */
+  void HoldAutoSave(bool isHeld);
+
 public:
   /*
    * constructor / destructor
@@ -260,6 +273,12 @@ public:
   void ShowPanel(unsigned id);
 
   void ShowOrganSettingsDialog();
+  /**
+   * Opens a voicing window for config nodes. Its changes reach the settings
+   * file only when the user saves them
+   * @param mpNodes the config nodes to voice
+   */
+  void ShowVoicingDialog(const std::vector<GOPipeConfigNode *> &mpNodes);
   void ShowMidiList();
   void ShowStops();
 
