@@ -237,7 +237,9 @@ void GOGuiOrgan::ShowOrganSettingsDialog() {
     registerWindow(
       GOGuiOrgan::ORGAN_DIALOG,
       NULL,
-      new GOOrganSettingsDialog(*mp_controller, this, nullptr));
+      new GOOrganSettingsDialog(*mp_controller, this, nullptr, [this]() {
+        return mp_controller && mp_controller->Save();
+      }));
   }
 }
 

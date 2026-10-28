@@ -35,7 +35,10 @@ EVT_BOOKCTRL_PAGE_CHANGED(wxID_ANY, GOOrganSettingsDialog::OnTabSelected)
 END_EVENT_TABLE()
 
 GOOrganSettingsDialog::GOOrganSettingsDialog(
-  GOOrganModel &organModel, GODocumentBase *doc, wxWindow *parent)
+  GOOrganModel &organModel,
+  GODocumentBase *doc,
+  wxWindow *parent,
+  const std::function<bool()> &saveFunction)
   : GOOrganSettingsDialogBase(
     parent,
     wxT("Organ settings"),
@@ -72,7 +75,7 @@ GOOrganSettingsDialog::GOOrganSettingsDialog(
   }
 
   // Don't move above because adding tabs raises events that require buttons
-  m_PipesTab = new GOOrganSettingsPipesTab(organModel, this);
+  m_PipesTab = new GOOrganSettingsPipesTab(organModel, this, saveFunction);
   AddTab(m_PipesTab);
 
   m_EnclosuresTab = new GOOrganSettingsEnclosuresTab(organModel, this);

@@ -8,6 +8,7 @@
 #ifndef GOORGANSETTINGSPIPESTAB_H
 #define GOORGANSETTINGSPIPESTAB_H
 
+#include <functional>
 #include <utility>
 #include <vector>
 
@@ -16,6 +17,7 @@
 
 #include "GOOrganSettingsTab.h"
 
+class wxButton;
 class wxCheckBox;
 class wxChoice;
 class wxComboBox;
@@ -38,23 +40,16 @@ private:
   GOConfig &r_config;
   GOPipeConfigNode &r_RootNode;
 
+  std::function<bool()> m_SaveFunction;
+
   wxTreeCtrl *m_Tree;
+  wxButton *m_VoicingButton;
   wxStaticText *m_MemoryDisplay;
   wxStaticText *m_BitDisplay;
-  wxTextCtrl *m_Amplitude;
-  wxSpinButton *m_AmplitudeSpin;
-  wxTextCtrl *m_Gain;
-  wxSpinButton *m_GainSpin;
-  wxTextCtrl *m_ManualTuning;
-  wxSpinButton *m_ManualTuningSpin;
-  wxTextCtrl *m_AutoTuningCorrection;
-  wxSpinButton *m_AutoTuningCorrectionSpin;
   wxTextCtrl *m_Delay;
   wxSpinButton *m_DelaySpin;
   wxTextCtrl *m_ReleaseLength;
   wxSpinButton *m_ReleaseLengthSpin;
-  wxTextCtrl *m_ToneBalance;
-  wxSpinButton *m_ToneBalanceSpin;
   wxComboBox *m_AudioGroup;
   wxString m_LastAudioGroup;
   wxCheckBox *m_IgnorePitch;
@@ -106,20 +101,11 @@ private:
   void OnTreeChanging(wxTreeEvent &e);
   void OnTreeChanged(wxTreeEvent &e);
   void OnTreeUpdated(wxCommandEvent &e) { Load(false); }
-  void OnAmplitudeChanged(wxCommandEvent &e);
-  void OnAmplitudeSpinChanged(wxSpinEvent &e);
-  void OnGainChanged(wxCommandEvent &e);
-  void OnGainSpinChanged(wxSpinEvent &e);
-  void OnManualTuningChanged(wxCommandEvent &e);
-  void OnManualTuningSpinChanged(wxSpinEvent &e);
-  void OnAutoTuningCorrectionChanged(wxCommandEvent &e);
-  void OnAutoTuningCorrectionSpinChanged(wxSpinEvent &e);
+  void OnVoicingClicked(wxCommandEvent &e);
   void OnDelayChanged(wxCommandEvent &e);
   void OnDelaySpinChanged(wxSpinEvent &e);
   void OnReleaseLengthChanged(wxCommandEvent &e);
   void OnReleaseLengthSpinChanged(wxSpinEvent &e);
-  void OnToneBalanceChanged(wxCommandEvent &e);
-  void OnToneBalanceSpinChanged(wxSpinEvent &e);
   void OnAudioGroupChanged(wxCommandEvent &e) { NotifyModified(); }
   void OnIgnorePitchChanged(wxCommandEvent &e) { NotifyModified(); }
   void OnBitsPerSampleChanged(wxCommandEvent &e);
@@ -130,8 +116,14 @@ private:
   void OnReleaseLoadChanged(wxCommandEvent &e);
 
 public:
+  /**
+   * @param saveFunction writes the settings file. It is used by the voicing
+   *   window. Returns true on success
+   */
   GOOrganSettingsPipesTab(
-    GOOrganModel &organModel, GOOrganSettingsDialogBase *pDlg);
+    GOOrganModel &organModel,
+    GOOrganSettingsDialogBase *pDlg,
+    const std::function<bool()> &saveFunction);
 
   void DistributeAudio() override;
   void ResetToDefault() override;

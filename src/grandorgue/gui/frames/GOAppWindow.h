@@ -56,6 +56,8 @@ private:
   wxMenu *m_file_menu;
   wxMenu *m_audio_menu;
   wxMenu *m_panel_menu;
+  // what the panel menu was last built from, to skip identical rebuilds
+  wxString m_PanelMenuSignature;
   wxMenu *m_favorites_menu;
   wxMenu *m_recent_menu;
   wxMenu *m_temperament_menu;
@@ -89,7 +91,14 @@ private:
 
   // Updates ReleseLength in the model, in the config, and in the control
   void UpdateReleaseLength(unsigned releaseLength);
+  /**
+   * @return the panel names, groups and open states that the panel menu is
+   *   built from
+   */
+  wxString GetPanelMenuSignature() const;
+  /** Rebuilds the panel menu if the panels or their open states changed */
   void UpdatePanelMenu();
+  void RebuildPanelMenu();
   void UpdateFavoritesMenu();
   void UpdateRecentMenu();
   void UpdateTemperamentMenu();

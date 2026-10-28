@@ -1,3 +1,4 @@
+- Added a live per-pipe voicing window for gain, tuning and tone balance: changes are heard on held notes while a slider moves, with Reset and Save, and the voicing kept on windchests, ranks and the organ is moved into the pipes at load https://github.com/GrandOrgue/grandorgue/issues/2389
 - Added a swell-box shelf equalizer: enclosures can now cut low or high frequencies as they close, in addition to overall volume attenuation https://github.com/GrandOrgue/grandorgue/issues/717
 - Fixed crash on receiving or playing a malformed Rodgers stop change SysEx MIDI message shorter than 9 bytes
 - Fixed MIDI player Play/Stop crashing when triggered by incoming MIDI https://github.com/GrandOrgue/grandorgue/issues/2636
