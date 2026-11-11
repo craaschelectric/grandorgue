@@ -10,6 +10,9 @@
 
 #include "sound/buffer/GOSoundBufferMutable.h"
 #include "sound/dsp-kernels/GOSoundOnePoleFilter.h"
+#include "threading/GOVersioned.h"
+
+class GOSoundProvider;
 
 /**
  * Maps a tone-balance knob value (-99..99: negative darkens via a low-pass
@@ -21,9 +24,19 @@
  * consumer.
  */
 class GOSoundToneBalanceFilter {
+public:
+  /** The coefficients published to the playing samplers */
+  using CoeffsVersioned = GOVersioned<GOSoundOnePoleFilter::Coeffs>;
+
 private:
   unsigned m_samplerate = 0;
-  GOSoundOnePoleFilter::Coeffs m_coeffs;
+  /** The last value passed to Init(), kept to recompute the coefficients when
+   * the sample rate changes */
+  int8_t m_Value = 0;
+  /** The coefficients for m_Value at m_samplerate. They are computed and
+   * published by the GUI thread (Init() and SetSamplerate()) and followed by
+   * the playing samplers (State::EnsureCoeffs()) without locks. */
+  CoeffsVersioned m_coeffs;
 
 public:
   /** Per-sampler, interleaved-stereo filter memory bound to one
@@ -33,35 +46,52 @@ public:
     /** Carried one-pole filter memory, one float per interleaved-stereo
      * channel. */
     float m_state[2];
-    // Points directly at the bound filter's m_coeffs, not at the filter
-    // itself - State only ever needs the coefficients, so there is no
-    // reason to go through a second indirection (a method call on the
-    // outer object) on every IsToApply()/ProcessBuffer() call. Set from
-    // Init() using a nested class's access to its enclosing class's
-    // private members - same privilege as before, just applied to the
-    // field instead of a method.
-    const GOSoundOnePoleFilter::Coeffs *p_coeffs;
+    /** The coefficients used by ProcessBuffer(): a consistent copy of the
+     * last published coefficients. Identity until the first EnsureCoeffs()
+     * that finds a published set. */
+    CoeffsVersioned::Snapshot m_coeffs;
 
   public:
-    State() { Init(nullptr); }
+    State() { Init(); }
 
     /**
-     * Binds this state to filter's coefficients and zeroes its carried
-     * memory.
-     * @param filter Coefficient source this state will read from
-     *   ProcessBuffer(); may be null (IsToApply() then always false)
+     * Resets this state: zeroes its carried memory and forgets the received
+     * coefficients, so that the next EnsureCoeffs() takes over the currently
+     * published set.
      */
-    void Init(const GOSoundToneBalanceFilter *filter);
+    void Init();
 
-    /** @return whether ProcessBuffer() would change the buffer - false
-     * when unbound or the bound Coeffs is not isActive */
-    bool IsToApply() { return p_coeffs && p_coeffs->isActive; }
+    /**
+     * Makes the coefficients of this state follow the coefficients published
+     * by the provider, so the sampler follows changes made while it is
+     * playing. Idempotent: copies the coefficients only if a new set has been
+     * published since the last call and is not being published at this
+     * moment; if it is, the old copy stays in use until the next call. The
+     * carried memory is cleared when the filter becomes inactive, so that it
+     * does not start from stale values when it becomes active again. Must be
+     * called once for each audio buffer before IsToApply() and
+     * ProcessBuffer().
+     * @param provider the provider whose GetToneFilterCoeffs() is followed
+     */
+    void EnsureCoeffs(const GOSoundProvider &provider);
+
+    /**
+     * @return whether ProcessBuffer() would change the buffer - false when
+     *   the coefficients copied by the last EnsureCoeffs() are not isActive
+     */
+    bool IsToApply() const { return m_coeffs.Get().isActive; }
+
+    /** @return the coefficients that ProcessBuffer() uses. For tests. */
+    const GOSoundOnePoleFilter::Coeffs &GetCoeffs() const {
+      return m_coeffs.Get();
+    }
 
     /** Filters outBuffer in place, one interleaved stereo frame at a time,
-     * via GOSoundOnePoleFilter::processSample() per channel, reading
-     * *p_coeffs directly. Caller must check IsToApply() first - this does
-     * not skip work on its own. */
+     * via GOSoundOnePoleFilter::processSample() per channel, using the
+     * coefficients copied by the last EnsureCoeffs(). Caller must check
+     * IsToApply() first - this does not skip work on its own. */
     inline void ProcessBuffer(GOSoundBufferMutable &outBuffer) {
+      const GOSoundOnePoleFilter::Coeffs &coeffs = m_coeffs.Get();
       const unsigned nFrames = outBuffer.GetNFrames();
       const unsigned nChannels = outBuffer.GetNChannels();
       float *pData = outBuffer.GetData();
@@ -71,30 +101,30 @@ public:
 
         for (unsigned nChannelsLeft = nChannels; nChannelsLeft;
              pState++, pData++, nChannelsLeft--)
-          *pData
-            = GOSoundOnePoleFilter::processSample(*p_coeffs, *pData, *pState);
+          *pData = GOSoundOnePoleFilter::processSample(coeffs, *pData, *pState);
       }
     }
   };
 
   /**
-   * Maps value to a filter type/frequency and computes m_coeffs via
-   * GOSoundOnePoleFilter::computeCoeffs(), using the sample rate from the
-   * last SetSamplerate() call.
+   * Maps value to a filter type/frequency, computes the coefficients via
+   * GOSoundOnePoleFilter::computeCoeffs() using the sample rate from the
+   * last SetSamplerate() call and publishes them. It may be called while
+   * samplers that use this filter are playing.
    * @param value Tone-balance knob value; 0 disables filtering
    */
   void Init(int8_t value);
 
-  /** @return whether this filter's Coeffs would change a buffer, i.e.
-   * m_coeffs.isActive */
-  bool IsToApply() const { return m_coeffs.isActive; }
+  /** @return the value of the last Init() call; 0 if it was not called */
+  int8_t GetValue() const { return m_Value; }
 
-  /** Sets the sample rate used by subsequent Init() calls; resets this
-   * instance to the identity filter until Init() is called again. */
-  void SetSamplerate(unsigned samplerate) {
-    m_samplerate = samplerate;
-    m_coeffs = GOSoundOnePoleFilter::Coeffs();
-  }
+  /** @return the published coefficients, to be followed by playing samplers */
+  const CoeffsVersioned &GetCoeffs() const { return m_coeffs; }
+
+  /** Sets the sample rate and republishes the coefficients of the last Init()
+   * value computed for this sample rate (an unfiltered set until Init() is
+   * called with a non-zero value). */
+  void SetSamplerate(unsigned samplerate);
 };
 
 #endif /* GOSOUNDTONEBALANCE_H_ */

@@ -9,7 +9,10 @@
 
 #include <cmath>
 
+#include "sound/providers/GOSoundProvider.h"
+
 void GOSoundToneBalanceFilter::Init(int8_t value) {
+  m_Value = value;
   GOSoundOnePoleFilter::Type type;
   double hz = 0;
 
@@ -22,12 +25,29 @@ void GOSoundToneBalanceFilter::Init(int8_t value) {
     type = GOSoundOnePoleFilter::Type::TYPE_HPF;
     hz = 20 * pow(800.0, value / 99.0);
   }
-  GOSoundOnePoleFilter::computeCoeffs(type, hz, 0, m_samplerate, m_coeffs);
+
+  GOSoundOnePoleFilter::Coeffs newCoeffs;
+
+  GOSoundOnePoleFilter::computeCoeffs(type, hz, 0, m_samplerate, newCoeffs);
+  m_coeffs.Publish(newCoeffs);
 }
 
-void GOSoundToneBalanceFilter::State::Init(
-  const GOSoundToneBalanceFilter *filter) {
-  p_coeffs = filter ? &filter->m_coeffs : nullptr;
+void GOSoundToneBalanceFilter::SetSamplerate(unsigned samplerate) {
+  m_samplerate = samplerate;
+  Init(m_Value);
+}
+
+void GOSoundToneBalanceFilter::State::Init() {
+  m_coeffs = CoeffsVersioned::Snapshot();
   for (int i = 0; i < 2; i++)
     m_state[i] = 0;
+}
+
+void GOSoundToneBalanceFilter::State::EnsureCoeffs(
+  const GOSoundProvider &provider) {
+  if (
+    provider.GetToneFilterCoeffs().RenewSnapshot(m_coeffs)
+    && !m_coeffs.Get().isActive)
+    for (int i = 0; i < 2; i++)
+      m_state[i] = 0;
 }
